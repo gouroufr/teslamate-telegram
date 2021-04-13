@@ -3,7 +3,7 @@
 # By Gouroufr inspired by https://github.com/JakobLichterfeld/TeslaMate_Telegram_Bot
 # Modified to be able to run without the API REST... we've got all infos we needed in the broker messages
 # Add translation to texts : Open call for other languages !
-# version 0.7 on april 13th, 2021 / copyleft Laurent alias gouroufr
+# BETA version 0.7 on april 13th, 2021 / copyleft Laurent alias gouroufr
 
 import os
 import time
@@ -16,6 +16,11 @@ import paho.mqtt.client as mqtt
 from telegram.bot import Bot
 from telegram.parsemode import ParseMode
 
+# debug
+import pdb, traceback, sys
+debug = False
+printdebug = False
+
 # Static variables
 crlf = "\n"
 pseudo = "❔" # not yet known
@@ -24,8 +29,10 @@ km = "❔" # not yet known
 ismaj = "❔" # not yet known
 etat_connu = "❔" # not yet known
 locked = "❔" # not yet known
+text_locked = "❔" # not yet known
 temps_restant_charge = "❔" # not yet known
 text_energie = "❔" # not yet known
+silence = True # global var to prevent redondant messages (is false only on update)
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -79,7 +86,6 @@ if language == "FR":
 	energieadded = "⚡️ 000 KwH ajoutés"
 	carislocked = "🔐 est verrouilée"
 	carisunlocked = "🔓 est déverrouilée"
-
 elif language == "SP":
 	print("SPANISH language not available yet") # No text translation available would send empty messages, so we end here
 	exit(1)
@@ -106,7 +112,7 @@ else:
 
 
 
-# Fully based on example from https://pypi.org/project/paho-mqtt/
+# Partially based on example from https://pypi.org/project/paho-mqtt/
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
 	if rc == 0:
@@ -138,115 +144,140 @@ def on_connect(client, userdata, flags, rc):
 
 # Overcharging static variables with infos collected each round
 def on_message(client, userdata, msg):
-	now = datetime.now()
-	today = now.strftime("%d-%m-%Y %H:%M:%S")
-	print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
-	print(text_msg)
-	print("...")
+	try:
+		global pseudo 
+		global model
+		global km
+		global ismaj
+		global etat_connu
+		global locked 
+		global text_locked 
+		global temps_restant_charge
+		global text_energie
+		global silence
+		global latitude
+		global longitude
 
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/display_name":
-		print("aaaaahhhhh.....")
-		pseudo = "🚗 "+str(msg.payload.decode())
-		print(pseudo)
+		now = datetime.now()
+		today = now.strftime("%d-%m-%Y %H:%M:%S")
+		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
 
-	if msg.topic == "teslamate/cars/1/display_name":
-		pseudo = "🚗 "+str(msg.payload.decode())
-		print(pseudo)		
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/display_name":
+			pseudo = "🚗 "+str(msg.payload.decode())
+			silence = False
+			if debug: bot.send_message(chat_id,text="debug : "+str(pseudo),parse_mode=ParseMode.HTML)
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/model":
+			model = "Model "+str(msg.payload.decode())
+			silence = False
+		
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/odometer":
+			km = str(msg.payload.decode())
+			silence = False
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/update_available":
+			ismaj = str(msg.payload.decode())
+			silence = False
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude":
+			latitude = str(msg.payload.decode())
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude":
+			longitude = str(msg.payload.decode())
+
+	
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/state":
+			silence = False
+			if str(msg.payload.decode()) == "online":
+				etat_connu = str(etatonline)
+			elif str(msg.payload.decode()) == "asleep":
+				etat_connu = str(etatendormie)
+			elif str(msg.payload.decode()) == "suspended":
+				etat_connu = str(etatsuspend)
+			elif str(msg.payload.decode()) == "charging":
+				etat_connu = str(etatcharge)
+			elif str(msg.payload.decode()) == "offline":
+				etat_connu = str(etatoffline)
+			elif str(msg.payload.decode()) == "start":
+				etat_connu = str(etatstart)
+			elif str(msg.payload.decode()) == "driving":
+				etat_connu = str(etatdrive)
+			else:
+				etat_connu = str(etatunk)
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/locked":
+			silence = False
+			locked = str(msg.payload.decode())
+			if str(locked) == "true": text_locked = carislocked
+			if str(locked) == "false": text_locked = carisunlocked
+			if debug: bot.send_message(chat_id,text=str(text_locked),parse_mode=ParseMode.HTML)	
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":
+			silence = False
+			temps_restant_mqtt = msg.payload.decode()
+			if float(temps_restant_mqtt) > 1:
+				temps_restant_heure = int(temps_restant_mqtt)
+				temps_restant_minute = round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)
+				texte_minute = minute if temps_restant_minute < 2 else minute + "" + plurialsuffix
+				if temps_restant_heure == 1:
+					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+texte_minute
+				elif temps_restant_heure == 0:
+					temps_restant_charge = "⏳ "+str(temps_restant_minute)+" "+texte_minute
+				else:
+					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute		
+			if float(temps_restant_mqtt) == 0.0:
+				temps_restant_charge = chargeterminee
 
 
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/model":
-		model = "Model "+str(msg.payload.decode())
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/charge_energy_added":
+			silence = False
+			kwhadded = msg.payload.decode()
+			text_energie = energieadded.replace("000", str(kwhadded))
 
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/odometer":
-		km = str(msg.payload.decode())
 
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/update_available":
-		ismaj = str(msg.payload.decode())
+		#if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/doors_open":
+			# if str(msg.payload.decode()) == "false":
+			# 	text_state = "fermée"
+			#if str(msg.payload.decode()) == "true":
+			#	text_state = "ouverte"
 
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/state":
-		if str(msg.payload.decode()) == "online":
-			etat_connu = str(etatonline)
-		elif str(msg.payload.decode()) == "asleep":
-			etat_connu = str(etatendormie)
-		elif str(msg.payload.decode()) == "suspended":
-			etat_connu = str(etatsuspend)
-		elif str(msg.payload.decode()) == "charging":
-			etat_connu = str(etatcharge)
-		elif str(msg.payload.decode()) == "offline":
-			etat_connu = str(etatoffline)
-		elif str(msg.payload.decode()) == "start":
-			etat_connu = str(etatstart)
-		elif str(msg.payload.decode()) == "driving":
-			etat_connu = str(etatdrive)
-		else:
-			etat_connu = str(etatunk)
+		#	text_msg = "🚙 "+str(jsonData['display_name'])+" est <b>"+text_state+"</b>\n🔋 : "+str(jsonData['usable_battery_level'])+"% ("+str(jsonData['est_battery_range_km'])+" km)\n"+text_energie+"\n"+lock_state+"\nPortes : "+doors_state+"\nCoffre : "+trunk_state+"\n🌡 intérieure : "+str(jsonData['inside_temp'])+"°c\n🌡 extérieure : "+str(jsonData['outside_temp'])+"°c\nClim : "+clim_state+"\nVersion : "+text_update+"\n"+str(today)
 
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/locked":
-		locked = "Model "+str(msg.payload.decode())
-		if str(locked) == "true": text_locked = carislocked
-		if str(locked) == "false": text_locked = carisunlocked
 		
 
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":
-		temps_restant_mqtt = msg.payload.decode()
-		if float(temps_restant_mqtt) > 1:
-			temps_restant_heure = int(temps_restant_mqtt)
-			temps_restant_minute = round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)
-			texte_minute = minute if temps_restant_minute < 2 else minute + "" + plurialsuffix
-			if temps_restant_heure == 1:
-				temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+texte_minute
-			elif temps_restant_heure == 0:
-				temps_restant_charge = "⏳ "+str(temps_restant_minute)+" "+texte_minute
-			else:
-				temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute
 
-		if float(temps_restant_mqtt) == 0.0:
-			temps_restant_charge = chargeterminee
-
-
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/charge_energy_added":
-		kwhadded = msg.payload.decode()
-		text_energie = energieadded.replace("000", str(kwhadded))
-
-
-	if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/doors_open" and notif_porte == True:
-		# if str(msg.payload.decode()) == "false":
-		# 	text_state = "fermée"
-		if str(msg.payload.decode()) == "true":
-			text_state = "ouverte"
-
-	#	text_msg = "🚙 "+str(jsonData['display_name'])+" est <b>"+text_state+"</b>\n🔋 : "+str(jsonData['usable_battery_level'])+"% ("+str(jsonData['est_battery_range_km'])+" km)\n"+text_energie+"\n"+lock_state+"\nPortes : "+doors_state+"\nCoffre : "+trunk_state+"\n🌡 intérieure : "+str(jsonData['inside_temp'])+"°c\n🌡 extérieure : "+str(jsonData['outside_temp'])+"°c\nClim : "+clim_state+"\nVersion : "+text_update+"\n"+str(today)
-	text_msg = "🚙 "+pseudo+" ("+model+")"+crlf+"\
-		"+etat_connu+crlf+"\
-			"+str(today)
-
-	bot.send_message(
-		chat_id,
-		text=str(text_msg),
-		parse_mode=ParseMode.HTML,
-	)
-
-	if send_current_location == True:
-		bot.send_location(
-			chat_id,
-			current_lat,
-			current_long,
-		)
+		if not silence:
+			# Do we have enough informations to send a complete message ?
+			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔":
+				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+"\
+					"+etat_connu+crlf+"\
+					"+text_locked+crlf+"\
+					"+crlf+str(today)	
+				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
+				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\
+	except: # catch *all* exceptions
+		e = sys.exc_info()
+		print(e) # (Exception Type, Exception Value, TraceBack)
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 
-client.connect(os.getenv('MQTT_BROKER_HOST', '127.0.0.1'),int(os.getenv('MQTT_BROKER_PORT', 1883)), 60)
 
-
+client.connect(os.getenv('MQTT_BROKER_HOST'),int(os.getenv('MQTT_BROKER_PORT', 1883)), 60)
 client.loop_start()  # start the loop
 try:
+
 	while True:
 		time.sleep(1)
 
-except KeyboardInterrupt:
-	print("exiting")
+except:
+        extype, value, tb = sys.exc_info()
+        traceback.print_exc()
+        # pdb.post_mortem(tb)
+
+#except KeyboardInterrupt:
+#	print("exiting")
 
 # au revoir...
 client.disconnect()
