@@ -15,30 +15,30 @@ from telegram.parsemode import ParseMode
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
 	print("Error: Please set the environment variable TELEGRAM_BOT_API_KEY and try again.")
 	exit(1)
-bot = Bot(os.getenv('TELEGRAM_BOT_API_KEY'))
 
+bot = Bot(os.getenv('TELEGRAM_BOT_API_KEY'))
 if os.getenv('TELEGRAM_BOT_CHAT_ID') == None:
 	print("Error: Please set the environment variable TELEGRAM_BOT_CHAT_ID and try again.")
 	exit(1)
+
 chat_id = os.getenv('TELEGRAM_BOT_CHAT_ID')
-api_url = os.getenv('TELSAMATE_MQTT_API_URL') #It should be something like http://127.0.0.1:3040/car/1?api_key=xxxxxxxxxxx
+
 notif_conduite = False
 notif_charge = True
 notif_porte = True
 notif_locked = True
+
 # based on example from https://pypi.org/project/paho-mqtt/
 # The callback for when the client receives a CONNACK response from the server.
-
-
 def on_connect(client, userdata, flags, rc):
 	print("Connected with result code "+str(rc))
 	if rc == 0:
 		print("Connected successfully to broker")
-		# bot.send_message(
-		# 	chat_id,
-		# 	text="Connecté au brocker MQTT...",
-		# 	parse_mode=ParseMode.HTML,
-		# )
+		bot.send_message(
+			chat_id,
+			text="Connexion initiale au brocker MQTT réussie...",
+			parse_mode=ParseMode.HTML,
+		)
 	else:
 		print("Connection failed")
 
@@ -47,16 +47,16 @@ def on_connect(client, userdata, flags, rc):
 
 	client.subscribe("teslamate/cars/1/update_available")
 	client.subscribe("teslamate/cars/1/doors_open")
-	# client.subscribe("teslamate/cars/1/usable_battery_level")
-	# client.subscribe("teslamate/cars/1/plugged_in")
+	client.subscribe("teslamate/cars/1/usable_battery_level")
+	client.subscribe("teslamate/cars/1/plugged_in")
 	client.subscribe("teslamate/cars/1/time_to_full_charge")
 	client.subscribe("teslamate/cars/1/locked")
 	client.subscribe("teslamate/cars/1/state")
-	# client.subscribe("teslamate/cars/1/shift_state")
-	# client.subscribe("teslamate/cars/1/latitude")
-	# client.subscribe("teslamate/cars/1/longitude")
-	# client.subscribe("teslamate/cars/1/speed")
-	# client.subscribe("teslamate/cars/1/heading")
+	client.subscribe("teslamate/cars/1/shift_state")
+	client.subscribe("teslamate/cars/1/latitude")
+	client.subscribe("teslamate/cars/1/longitude")
+	client.subscribe("teslamate/cars/1/speed")
+	client.subscribe("teslamate/cars/1/heading")
 
 # The callback for when a PUBLISH message is received from the server.
 
