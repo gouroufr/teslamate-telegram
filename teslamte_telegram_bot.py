@@ -35,6 +35,7 @@ temps_restant_charge = "❔" # not yet known
 text_energie = "❔" # not yet known
 usable_battery_level = "❔" # not yet known
 nouvelleinformation = False # global var to prevent redondant messages (is true only when new infos appears)
+minbat=5  # minimum battery level to not display alert message
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -88,6 +89,7 @@ if language == "FR":
 	energieadded = "⚡️ 000 KwH ajoutés"
 	carislocked = "🔐 est verrouilée"
 	carisunlocked = "🔓 est déverrouilée"
+	lowbattery="Batterie faible"
 elif language == "SP":
 	print("SPANISH language not available yet") # No text translation available would send empty messages, so we end here
 	exit(1)
@@ -111,7 +113,7 @@ else:
 	energieadded = "⚡️ 000 KwH added"  # Keep the 000 in the string, a replace is made with real value
 	carislocked = "🔐 is locked"
 	carisunlocked = "🔓 is unlocked"
-
+	lowbattery="Low battery"
 
 
 # Partially based on example from https://pypi.org/project/paho-mqtt/
@@ -255,13 +257,12 @@ def on_message(client, userdata, msg):
 			# Do we have enough informations to send a complete message ?
 			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔":
 				# standard message
-				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+"\
-					"+etat_connu+crlf+"\
-					"+text_locked+crlf+"\
-					"
+				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+etat_connu+crlf+text_locked+crlf
 				# Do we have some special infos to add to the standard message ?
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
-				if usable_battery_level != "❔": text_msg = text_msg+"🔋 "+usable_battery_level+" %"+crlf
+				if usable_battery_level != "❔" and int(usable_battery_level) > minbat:text_msg = text_msg+"🔋 "+usable_battery_level+" %"+crlf
+				else: text_msg = text_msg+"🛢️ "+usable_battery_level+" % "+lowbattery+crlf
+
 
 					
 
