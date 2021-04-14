@@ -18,8 +18,7 @@ from telegram.parsemode import ParseMode
 
 # debug
 import pdb, traceback, sys
-debug = False
-printdebug = False
+debug = False  # internal use, should be deleted before or at least false when going to production/publish
 
 # Static variables
 crlf = "\n"
@@ -32,7 +31,8 @@ locked = "❔" # not yet known
 text_locked = "❔" # not yet known
 temps_restant_charge = "❔" # not yet known
 text_energie = "❔" # not yet known
-silence = True # global var to prevent redondant messages (is false only on update)
+usable_battery_level = "❔" # not yet known
+nouvelleinformation = False # global var to prevent redondant messages (is true only when new infos appears)
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -154,66 +154,72 @@ def on_message(client, userdata, msg):
 		global text_locked 
 		global temps_restant_charge
 		global text_energie
-		global silence
+		global nouvelleinformation
 		global latitude
 		global longitude
-
+		global usable_battery_level
 		now = datetime.now()
 		today = now.strftime("%d-%m-%Y %H:%M:%S")
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
 
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/display_name":
-			pseudo = "🚗 "+str(msg.payload.decode())
-			silence = False
-			if debug: bot.send_message(chat_id,text="debug : "+str(pseudo),parse_mode=ParseMode.HTML)
-
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/model":
-			model = "Model "+str(msg.payload.decode())
-			silence = False
+		# Name and Model should not be changed frequently, no message necessary
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/display_name": pseudo = "🚗 "+str(msg.payload.decode())
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/model": model = "Model "+str(msg.payload.decode())
 		
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/odometer":
-			km = str(msg.payload.decode())
-			silence = False
+		# Car is moving, don't bother the driver
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/odometer": km = str(msg.payload.decode())
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude": latitude = str(msg.payload.decode())
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude": longitude = str(msg.payload.decode())
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = str(msg.payload.decode())
+		
 
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/update_available":
-			ismaj = str(msg.payload.decode())
-			silence = False
-
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude":
-			latitude = str(msg.payload.decode())
-
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude":
-			longitude = str(msg.payload.decode())
-
+			if ismaj != str(msg.payload.decode()):
+				ismaj = str(msg.payload.decode())
+				nouvelleinformation = True
 	
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/state":
-			silence = False
 			if str(msg.payload.decode()) == "online":
-				etat_connu = str(etatonline)
+				if etat_connu != str(etatonline):
+					etat_connu = str(etatonline)
+					nouvelleinformation = True
 			elif str(msg.payload.decode()) == "asleep":
-				etat_connu = str(etatendormie)
+				if etat_connu != str(etatendormie):
+					etat_connu = str(etatendormie)
+					nouvelleinformation = True
 			elif str(msg.payload.decode()) == "suspended":
-				etat_connu = str(etatsuspend)
+				if etat_connu != str(etatsuspend):
+					etat_connu = str(etatsuspend)
+					nouvelleinformation = True
 			elif str(msg.payload.decode()) == "charging":
-				etat_connu = str(etatcharge)
+				if etat_connu != str(etatcharge):
+					etat_connu = str(etatcharge)
+					nouvelleinformation = True
 			elif str(msg.payload.decode()) == "offline":
-				etat_connu = str(etatoffline)
+				if etat_connu != str(etatoffline):
+					etat_connu = str(etatoffline)
+					nouvelleinformation = True
 			elif str(msg.payload.decode()) == "start":
-				etat_connu = str(etatstart)
+				if etat_connu != str(etatstart):
+					etat_connu = str(etatstart)
+					nouvelleinformation = True
 			elif str(msg.payload.decode()) == "driving":
+				if etat_connu != str(etatdrive):
+					etat_connu = str(etatdrive)
+					nouvelleinformation = True				
 				etat_connu = str(etatdrive)
 			else:
-				etat_connu = str(etatunk)
+				etat_connu = str(etatunk)  # do not send infos about this unknown states, we don't know what to say... :)
 
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/locked":
-			silence = False
-			locked = str(msg.payload.decode())
-			if str(locked) == "true": text_locked = carislocked
-			if str(locked) == "false": text_locked = carisunlocked
-			if debug: bot.send_message(chat_id,text=str(text_locked),parse_mode=ParseMode.HTML)	
+			if locked != str(msg.payload.decode()):
+				locked = str(msg.payload.decode())
+				nouvelleinformation = True
+				if str(locked) == "true": text_locked = carislocked
+				if str(locked) == "false": text_locked = carisunlocked
+
 
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":
-			silence = False
 			temps_restant_mqtt = msg.payload.decode()
 			if float(temps_restant_mqtt) > 1:
 				temps_restant_heure = int(temps_restant_mqtt)
@@ -227,10 +233,10 @@ def on_message(client, userdata, msg):
 					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute		
 			if float(temps_restant_mqtt) == 0.0:
 				temps_restant_charge = chargeterminee
+				nouvelleinformation = True   # tell the user the car is charged
 
 
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/charge_energy_added":
-			silence = False
 			kwhadded = msg.payload.decode()
 			text_energie = energieadded.replace("000", str(kwhadded))
 
@@ -241,19 +247,26 @@ def on_message(client, userdata, msg):
 			#if str(msg.payload.decode()) == "true":
 			#	text_state = "ouverte"
 
-		#	text_msg = "🚙 "+str(jsonData['display_name'])+" est <b>"+text_state+"</b>\n🔋 : "+str(jsonData['usable_battery_level'])+"% ("+str(jsonData['est_battery_range_km'])+" km)\n"+text_energie+"\n"+lock_state+"\nPortes : "+doors_state+"\nCoffre : "+trunk_state+"\n🌡 intérieure : "+str(jsonData['inside_temp'])+"°c\n🌡 extérieure : "+str(jsonData['outside_temp'])+"°c\nClim : "+clim_state+"\nVersion : "+text_update+"\n"+str(today)
-
-		
 
 
-		if not silence:
+		if nouvelleinformation:
 			# Do we have enough informations to send a complete message ?
 			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔":
+				# standard message
 				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+"\
 					"+etat_connu+crlf+"\
 					"+text_locked+crlf+"\
-					"+crlf+str(today)	
+					"
+				# Do we have some special infos to add to the standard message ?
+				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
+				if usable_battery_level != "❔": text_msg = text_msg+"🔋 "+usable_battery_level+" %"+crlf
+
+					
+
+				text_msg = text_msg+crlf+str(today)	# timestamp to the message
 				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
+				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
+
 				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\
 	except: # catch *all* exceptions
 		e = sys.exc_info()
