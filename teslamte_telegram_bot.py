@@ -5,6 +5,8 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.7 on april 13th, 2021 / copyleft Laurent alias gouroufr
 
+version = "Version 1.0 du 14/04/2021"
+
 import os
 import time
 from datetime import datetime
@@ -68,7 +70,7 @@ else:
 # Call for volunteers => Please provide PR with other languages
 if language == "FR":
 	print("FRENCH language set")
-	contobroker = "✔️ connecté au broker MQTT avec succès"
+	contobroker = "✔️ connecté au broker MQTT avec succès"+crlf+version
 	brokerfailed = "❌ échec de connexion au broker MQTT"
 	majdispo = "🎁 une mise à jour est disponible"
 	etatendormie = "💤 est endormie"
