@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.7 on april 13th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 1.0 du 14/04/2021"
+version = "Version 0.2 du 15/04/2021"
 
 import os
 import time
@@ -86,7 +86,7 @@ if language == "FR":
 	minute = "minute"
 	plurialsuffix = "s" 
 	chargeterminee = "✅ charge terminée"
-	energieadded = "⚡️ 000 KwH ajoutés"
+	energieadded = "⚡️ 000 KwH ajoutés"  # Keep the 000 in the string, a replace is made with real value
 	carislocked = "🔐 est verrouilée"
 	carisunlocked = "🔓 est déverrouilée"
 	lowbattery="Batterie faible"
@@ -166,17 +166,39 @@ def on_message(client, userdata, msg):
 		today = now.strftime("%d-%m-%Y %H:%M:%S")
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
 
-		# Name and Model should not be changed frequently, no message necessary
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/display_name": pseudo = "🚗 "+str(msg.payload.decode())
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/model": model = "Model "+str(msg.payload.decode())
-		
-		# Car is moving, don't bother the driver
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/odometer": km = str(msg.payload.decode())
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude": latitude = str(msg.payload.decode())
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude": longitude = str(msg.payload.decode())
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = str(msg.payload.decode())
-		
 
+		# Do not send any messages :
+		# --------------------------
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/display_name": pseudo = "🚗 "+str(msg.payload.decode())                 # do we change name often ?
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/model": model = "Model "+str(msg.payload.decode())                       # Model is very static...
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/odometer": km = str(msg.payload.decode())                                # Car is moving, don't bother the driver
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude": latitude = str(msg.payload.decode())                          # Car is moving, don't bother the driver
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude": longitude = str(msg.payload.decode())                        # Car is moving, don't bother the driver
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = str(msg.payload.decode())  # Car is moving, don't bother the driver
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
+			temps_restant_mqtt = msg.payload.decode()
+			if float(temps_restant_mqtt) > 1:
+				temps_restant_heure = int(temps_restant_mqtt)
+				temps_restant_minute = round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)
+				texte_minute = minute if temps_restant_minute < 2 else minute + "" + plurialsuffix
+				if temps_restant_heure == 1:
+					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+texte_minute
+				elif temps_restant_heure == 0:
+					temps_restant_charge = "⏳ "+str(temps_restant_minute)+" "+texte_minute
+				else:
+					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute		
+			if float(temps_restant_mqtt) == 0.0:
+				temps_restant_charge = chargeterminee
+				nouvelleinformation = True     # Exception : We should tell the user the car is charged
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/charge_energy_added":                                                  # Collect infos but don't send a message NOW
+			kwhadded = msg.payload.decode()
+			text_energie = energieadded.replace("000", str(kwhadded))
+
+
+		
+		# Please send me a message :
+		# --------------------------
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/update_available":
 			if ismaj != str(msg.payload.decode()):
 				ismaj = str(msg.payload.decode())
@@ -213,38 +235,19 @@ def on_message(client, userdata, msg):
 					nouvelleinformation = True				
 				etat_connu = str(etatdrive)
 			else:
-				etat_connu = str(etatunk)  # do not send infos about this unknown states, we don't know what to say... :)
+				etat_connu = str(etatunk)  # do not send messages as we don't know what to say, keep quiet and move on... :)
 
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/locked":
-			if locked != str(msg.payload.decode()):
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/locked":              # interesting info but at initial startup it gives 1 message for state and 1 message for lock
+			if locked != str(msg.payload.decode()):                           # We should add a one time pointer to avoid this (golobal)
 				locked = str(msg.payload.decode())
 				nouvelleinformation = True
 				if str(locked) == "true": text_locked = carislocked
 				if str(locked) == "false": text_locked = carisunlocked
 
 
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":
-			temps_restant_mqtt = msg.payload.decode()
-			if float(temps_restant_mqtt) > 1:
-				temps_restant_heure = int(temps_restant_mqtt)
-				temps_restant_minute = round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)
-				texte_minute = minute if temps_restant_minute < 2 else minute + "" + plurialsuffix
-				if temps_restant_heure == 1:
-					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+texte_minute
-				elif temps_restant_heure == 0:
-					temps_restant_charge = "⏳ "+str(temps_restant_minute)+" "+texte_minute
-				else:
-					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute		
-			if float(temps_restant_mqtt) == 0.0:
-				temps_restant_charge = chargeterminee
-				nouvelleinformation = True   # tell the user the car is charged
 
 
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/charge_energy_added":
-			kwhadded = msg.payload.decode()
-			text_energie = energieadded.replace("000", str(kwhadded))
-
-
+		# awaiting translation code modification	  	
 		#if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/doors_open":
 			# if str(msg.payload.decode()) == "false":
 			# 	text_state = "fermée"
@@ -255,7 +258,7 @@ def on_message(client, userdata, msg):
 
 		if nouvelleinformation:
 			# Do we have enough informations to send a complete message ?
-			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔":
+			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔":
 				# standard message
 				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+etat_connu+crlf+text_locked+crlf
 				# Do we have some special infos to add to the standard message ?
@@ -265,12 +268,14 @@ def on_message(client, userdata, msg):
 
 
 					
+				# timestamp to the message
+				text_msg = text_msg+crlf+str(today)
 
-				text_msg = text_msg+crlf+str(today)	# timestamp to the message
+				# Send the message
 				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 
-				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\
+				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\    need to find out a way to send a map
 	except: # catch *all* exceptions
 		e = sys.exc_info()
 		print(e) # (Exception Type, Exception Value, TraceBack)
