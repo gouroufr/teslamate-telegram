@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.7 on april 13th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 0.2 du 15/04/2021"
+version = "Version 2021041601"
 
 import os
 import time
@@ -276,6 +276,7 @@ def on_message(client, userdata, msg):
 				# Send the message
 				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
+				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 
 				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\    need to find out a way to send a map
 	except: # catch *all* exceptions
