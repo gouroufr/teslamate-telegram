@@ -177,17 +177,17 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = str(msg.payload.decode())  # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = msg.payload.decode()
-			print(temps_restant_mqtt)
 			if float(temps_restant_mqtt) > 1:
-				temps_restant_heure = int(temps_restant_mqtt)
-				temps_restant_minute = round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)
+				nouvelleinformation = True     # Exception : send an update each time we get an updated ETA to full charge (debug)
+				temps_restant_heure = int(float(temps_restant_mqtt))
+				temps_restant_minute = int(float(round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)))
 				texte_minute = minute if temps_restant_minute < 2 else minute + "" + plurialsuffix
 				if temps_restant_heure == 1:
 					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+texte_minute
 				elif temps_restant_heure == 0:
 					temps_restant_charge = "⏳ "+str(temps_restant_minute)+" "+texte_minute
 				else:
-					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute		
+					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute
 			if float(temps_restant_mqtt) == 0.0:
 				temps_restant_charge = chargeterminee
 				nouvelleinformation = True     # Exception : We should tell the user the car is charged
@@ -261,9 +261,10 @@ def on_message(client, userdata, msg):
 			# Do we have enough informations to send a complete message ?
 			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔":
 				# standard message
-				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+etat_connu+crlf+text_locked+crlf
+				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+text_locked+crlf+etat_connu+crlf
 				# Do we have some special infos to add to the standard message ?
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
+				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
 				if usable_battery_level != "❔" and int(usable_battery_level) > minbat:text_msg = text_msg+"🔋 "+usable_battery_level+" %"+crlf
 				else: text_msg = text_msg+"🛢️ "+usable_battery_level+" % "+lowbattery+crlf
 
