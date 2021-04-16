@@ -177,6 +177,7 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = str(msg.payload.decode())  # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = msg.payload.decode()
+			print(temps_restant_mqtt)
 			if float(temps_restant_mqtt) > 1:
 				temps_restant_heure = int(temps_restant_mqtt)
 				temps_restant_minute = round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)
