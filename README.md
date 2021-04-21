@@ -14,7 +14,7 @@ Environnement variables :
 
 
 Example of a docker-compose for the full suite of teslamate containers including this Telegram bot :
-
+```
 version: "3"
 
 services:
@@ -84,3 +84,4 @@ volumes:
   mosquitto-conf:
   mosquitto-data:
 
+```
