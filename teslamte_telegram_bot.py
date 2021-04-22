@@ -188,7 +188,7 @@ def on_message(client, userdata, msg):
 					temps_restant_charge = "⏳ "+str(temps_restant_minute)+" "+texte_minute
 				else:
 					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute
-			if float(temps_restant_mqtt) == 0.0:
+			if int(float(temps_restant_mqtt) * 60 ) == 0:
 				temps_restant_charge = chargeterminee
 				nouvelleinformation = True     # Exception : We should tell the user the car is charged
 

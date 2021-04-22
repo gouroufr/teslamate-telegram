@@ -74,7 +74,8 @@ services:
       - MQTT_BROKER_PORT=1883 #optional, default 1883
       - TELEGRAM_BOT_API_KEY=1234567890:123456789012345678901234567890 # to be changed
       - TELEGRAM_BOT_CHAT_ID=1234567890 # to be changed
-      - LANGUAGE=FR # to be changed : FR stands for French / EN stands for English / please PR for additionnal languages support
+      - LANGUAGE=FR # to be changed : FR stands for French / EN stands for English
+      # please PR for additionnal languages support
 
 
 
@@ -85,3 +86,11 @@ volumes:
   mosquitto-data:
 
 ```
+
+*** Licence and donations : ***
+
+All is free software under GPL licence.
+
+Donations are welcome :
+
+send bitcoins to 15DbfoLVmJ1iwHGnaeB25NBD2kE393XZZD or register for free (and earn btc) with this referral link : https://freebitco.in/?r=36618348&tag=ghteslamatetg
