@@ -93,4 +93,4 @@ All is free software under GPL licence.
 
 Donations are welcome :
 
-send bitcoins to 15DbfoLVmJ1iwHGnaeB25NBD2kE393XZZD or register for free (and earn btc) with this referral link : https://freebitco.in/?r=36618348&tag=ghteslamatetg
+send bitcoins to 15DbfoLVmJ1iwHGnaeB25NBD2kE393XZZD or register and play (Caution: it's free, so you'll never become rich !) for free with this referral link : https://freebitco.in/?r=36618348&tag=ghteslamatetg
