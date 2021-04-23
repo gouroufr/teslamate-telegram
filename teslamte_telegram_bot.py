@@ -275,9 +275,9 @@ def on_message(client, userdata, msg):
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
-				if usable_battery_level != "❔" and int(usable_battery_level) > minbat:text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
-				else: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
-				if int(float(usable_battery_level)) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
+				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
+				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
+				if int(usable_battery_level) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
 					
 				# timestamp to the message
 				text_msg = text_msg+crlf+str(today)
