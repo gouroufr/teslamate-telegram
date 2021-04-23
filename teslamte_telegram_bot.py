@@ -21,6 +21,7 @@ from telegram.parsemode import ParseMode
 # debug
 import pdb, traceback, sys
 debug = False  # internal use, should be deleted before or at least false when going to production/publish
+send_current_location = False
 
 # Static variables
 crlf = "\n"
@@ -86,7 +87,7 @@ if language == "FR":
 	minute = "minute"
 	plurialsuffix = "s" 
 	chargeterminee = "✅ charge terminée"
-	energieadded = "⚡️ 000 KwH ajoutés"  # Keep the 000 in the string, a replace is made with real value
+	energieadded = "⚡️ 000 kWh ajoutés"  # Keep the 000 in the string, a replace is made with real value
 	carislocked = "🔐 est verrouilée"
 	carisunlocked = "🔓 est déverrouilée"
 	lowbattery="Batterie faible"
@@ -110,7 +111,7 @@ else:
 	minute = "minute" 
 	plurialsuffix = "s" 
 	chargeterminee = "✅ charge ended"
-	energieadded = "⚡️ 000 KwH added"  # Keep the 000 in the string, a replace is made with real value
+	energieadded = "⚡️ 000 kWh added"  # Keep the 000 in the string, a replace is made with real value
 	carislocked = "🔐 is locked"
 	carisunlocked = "🔓 is unlocked"
 	lowbattery="Low battery"
@@ -261,7 +262,7 @@ def on_message(client, userdata, msg):
 			# Do we have enough informations to send a complete message ?
 			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔":
 				# standard message
-				text_msg = pseudo+" ("+model+") "+str(km)+" Km"+crlf+text_locked+crlf+etat_connu+crlf
+				text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				# Do we have some special infos to add to the standard message ?
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
@@ -279,6 +280,12 @@ def on_message(client, userdata, msg):
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 
 				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\    need to find out a way to send a map
+				if send_current_location == True:
+					bot.send_location(
+						chat_id,
+						latitude,
+						longitude
+					)
 	except: # catch *all* exceptions
 		e = sys.exc_info()
 		print(e) # (Exception Type, Exception Value, TraceBack)
