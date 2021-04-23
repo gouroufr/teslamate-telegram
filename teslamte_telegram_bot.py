@@ -38,6 +38,8 @@ usable_battery_level = -1 # not yet known
 nouvelleinformation = False # global var to prevent redondant messages (is true only when new infos appears)
 minbat=5  # minimum battery level that displays an alert message
 doors_state = "❔"  # we don't know yet if doors are opened or closed
+latitude = 0
+longitude = 0
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -277,7 +279,7 @@ def on_message(client, userdata, msg):
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
-				if int(usable_battery_level)) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
+				if int(usable_battery_level) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
 					
 				# timestamp to the message
 				text_msg = text_msg+crlf+str(today)
@@ -288,7 +290,7 @@ def on_message(client, userdata, msg):
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 
-				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\    need to find out a way to send a map
+				print("<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>")
 
 				# Merged from a PR from Mir but commented out because I want to send a small map (or at least a link to), not only some unreadable coordinates...
 				# There is also the listed geofence names to keep in mind in case the user defined some places.
