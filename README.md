@@ -89,7 +89,7 @@ volumes:
 ```
 
 
-** Licence and donations : **
+*** Licence and donations : ***
 
 All is free software under GPL licence.
 
