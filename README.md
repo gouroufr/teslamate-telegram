@@ -5,13 +5,13 @@ This is a TESLAMATE complement that sends updates to a Telegram chat.
 
 Environnement variables : 
 
-      - MQTT_BROKER_HOST=mosquitto_IP   # 
-      - MQTT_BROKER_PORT=mosquitto_PORT # (default 1883)
-      - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx # See Telegram doc
-      - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx # See Telegram doc
-      - LANGUAGE=EN # FR (french) is also available (default ENglish)
-      - GPS=True # or False : includes car location map in Telegram message, default False
-      - CAR_ID=1 # Your "n"th Tesla car in your inventory... default 1st one
+      - MQTT_BROKER_HOST=mosquitto_IP                  # IP or FQDN 
+      - MQTT_BROKER_PORT=mosquitto_PORT                # (default 1883)
+      - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx   # See Telegram doc
+      - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx            # See Telegram doc
+      - LANGUAGE=EN                                    # FR (french) is also available (default ENglish)
+      - GPS=True                                       # or False : includes car location map in Telegram message, default False
+      - CAR_ID=1                                       # Your "n"th Tesla car in your inventory... default 1st one
 
 
 
@@ -25,7 +25,7 @@ services:
     restart: always
     environment:
       - DATABASE_USER=teslamate  # to be changed
-      - DATABASE_PASS=secret     #to be changed
+      - DATABASE_PASS=secret     # to be changed
       - DATABASE_NAME=teslamate  # to be changed
       - DATABASE_HOST=database
       - MQTT_HOST=mosquitto
@@ -52,8 +52,8 @@ services:
     environment:
       - DATABASE_USER=teslamate 
       - DATABASE_PASS=secret    # to be changed
-      - DATABASE_NAME=teslamate # 
-      - DATABASE_HOST=database  # 
+      - DATABASE_NAME=teslamate # to be changed
+      - DATABASE_HOST=database  # to be changed
     ports:
       - 3000:3000
     volumes:
@@ -72,14 +72,13 @@ services:
     image: gouroufr/teslamate-telegram:latest
     restart: always
     environment:
-      - MQTT_BROKER_HOST=mosquitto   # automagically resolved... thks docker
-      - MQTT_BROKER_PORT=1883 #optional, default 1883
-      - TELEGRAM_BOT_API_KEY=1234567890:123456789012345678901234567890 # to be changed
-      - TELEGRAM_BOT_CHAT_ID=1234567890 # to be changed
-      - LANGUAGE=FR # to be changed : FR stands for French / EN stands for English / Default EN
-      - GPS=True # or False : includes car location map in Telegram message, default False
-      - CAR_ID=1 # Your "n"th Tesla car in your inventory... default 1st one
-
+      - MQTT_BROKER_HOST=mosquitto_IP                  # IP or FQDN 
+      - MQTT_BROKER_PORT=mosquitto_PORT                # (default 1883)
+      - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx   # See Telegram doc
+      - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx            # See Telegram doc
+      - LANGUAGE=EN                                    # FR (french) is also available (default ENglish)
+      - GPS=True                                       # or False : includes car location map in Telegram message, default False
+      - CAR_ID=1                                       # Your "n"th Tesla car in your inventory... default 1st one
 
 volumes:
   teslamate-db:
@@ -89,7 +88,8 @@ volumes:
 
 ```
 
-*** Licence and donations : ***
+
+** Licence and donations : **
 
 All is free software under GPL licence.
 
