@@ -9,7 +9,9 @@ Environnement variables :
       - MQTT_BROKER_PORT=mosquitto_PORT # (default 1883)
       - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx # See Telegram doc
       - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx # See Telegram doc
-      - LANGUAGE=EN # FR (french) is also available (default EN)
+      - LANGUAGE=EN # FR (french) is also available (default ENglish)
+      - GPS=True # or False : includes car location map in Telegram message, default False
+      - CAR_ID=1 # Your "n"th Tesla car in your inventory... default 1st one
 
 
 
@@ -75,8 +77,8 @@ services:
       - TELEGRAM_BOT_API_KEY=1234567890:123456789012345678901234567890 # to be changed
       - TELEGRAM_BOT_CHAT_ID=1234567890 # to be changed
       - LANGUAGE=FR # to be changed : FR stands for French / EN stands for English / Default EN
-      - GPS=True # or False : car location map, default False
-      - CAR_ID=1 # Your first Tesla car in your inventory... default 1
+      - GPS=True # or False : includes car location map in Telegram message, default False
+      - CAR_ID=1 # Your "n"th Tesla car in your inventory... default 1st one
 
 
 volumes:
