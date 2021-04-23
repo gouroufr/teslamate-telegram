@@ -3,9 +3,9 @@
 # By Gouroufr inspired by https://github.com/JakobLichterfeld/TeslaMate_Telegram_Bot
 # Modified to be able to run without the API REST... we've got all infos we needed in the broker messages
 # Add translation to texts : Open call for other languages !
-# BETA version 0.8 on april 23th, 2021 / copyleft Laurent alias gouroufr
+# BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210423-01"
+version = "Version 20210423-02"
 
 import os
 import time
@@ -38,8 +38,8 @@ usable_battery_level = -1 # not yet known
 nouvelleinformation = False # global var to prevent redondant messages (is true only when new infos appears)
 minbat=5  # minimum battery level that displays an alert message
 doors_state = "❔"  # we don't know yet if doors are opened or closed
-latitude = 0
-longitude = 0
+latitude = "❔"
+longitude = "❔"
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -66,8 +66,13 @@ else:
 	CAR_ID = os.getenv('CAR_ID')
 	# should test if entry is a number... (btw what is the max ?)
 
-	# TODO : add the Km ou Miles choice
+if os.getenv('GPS') == None:
+	GPS = False  # default no
+else:
+	GPS = os.getenv('GPS')
 
+	# TODO : add the Km ou Miles choice
+GPS = True
 # Text translation depends on a 2 letters code : 
 # FR : Français
 # EN : English
@@ -270,7 +275,7 @@ def on_message(client, userdata, msg):
 
 		if nouvelleinformation:
 			# Do we have enough informations to send a complete message ?
-			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔":
+			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔":
 				# standard message
 				text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				# Do we have some special infos to add to the standard message ?
@@ -280,8 +285,11 @@ def on_message(client, userdata, msg):
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
 				if int(usable_battery_level) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
-					
-				# timestamp to the message
+
+				# GPS location (googlemap)
+				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
+
+				# timestamp the message
 				text_msg = text_msg+crlf+str(today)
 
 				# Send the message
@@ -289,20 +297,6 @@ def on_message(client, userdata, msg):
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
-
-				print("<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>")
-
-				# Merged from a PR from Mir but commented out because I want to send a small map (or at least a link to), not only some unreadable coordinates...
-				# There is also the listed geofence names to keep in mind in case the user defined some places.
-				# :)
-				#
-				#if send_current_location == True:
-				#	bot.send_location(
-				#		chat_id,
-				#		latitude,
-				#		longitude
-				#	) 
-
 
 
 	except: # catch *all* exceptions

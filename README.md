@@ -74,9 +74,9 @@ services:
       - MQTT_BROKER_PORT=1883 #optional, default 1883
       - TELEGRAM_BOT_API_KEY=1234567890:123456789012345678901234567890 # to be changed
       - TELEGRAM_BOT_CHAT_ID=1234567890 # to be changed
-      - LANGUAGE=FR # to be changed : FR stands for French / EN stands for English
-      # please PR for additionnal languages support
-
+      - LANGUAGE=FR # to be changed : FR stands for French / EN stands for English / Default EN
+      - GPS=True # or False : car location map, default False
+      - CAR_ID=1 # Your first Tesla car in your inventory... default 1
 
 
 volumes:
