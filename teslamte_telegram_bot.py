@@ -3,9 +3,9 @@
 # By Gouroufr inspired by https://github.com/JakobLichterfeld/TeslaMate_Telegram_Bot
 # Modified to be able to run without the API REST... we've got all infos we needed in the broker messages
 # Add translation to texts : Open call for other languages !
-# BETA version 0.7 on april 13th, 2021 / copyleft Laurent alias gouroufr
+# BETA version 0.8 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 2021041601"
+version = "Version 20210423-01"
 
 import os
 import time
@@ -277,7 +277,7 @@ def on_message(client, userdata, msg):
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
-				if int(usable_battery_level) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
+				if int(usable_battery_level)) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
 					
 				# timestamp to the message
 				text_msg = text_msg+crlf+str(today)
