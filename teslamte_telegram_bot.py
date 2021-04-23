@@ -280,12 +280,20 @@ def on_message(client, userdata, msg):
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 
 				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\    need to find out a way to send a map
-				if send_current_location == True:
-					bot.send_location(
-						chat_id,
-						latitude,
-						longitude
-					)
+
+				# Merged from a PR from Mir but commented out because I want to send a small map (or at least a link to), not only some unreadable coordinates...
+				# There is also the listed geofence names to keep in mind in case the user defined some places.
+				# :)
+				#
+				#if send_current_location == True:
+				#	bot.send_location(
+				#		chat_id,
+				#		latitude,
+				#		longitude
+				#	) 
+
+
+
 	except: # catch *all* exceptions
 		e = sys.exc_info()
 		print(e) # (Exception Type, Exception Value, TraceBack)
