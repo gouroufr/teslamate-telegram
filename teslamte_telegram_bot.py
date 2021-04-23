@@ -197,6 +197,13 @@ def on_message(client, userdata, msg):
 			kwhadded = msg.payload.decode()
 			text_energie = energieadded.replace("000", str(kwhadded))
 
+		## DEBUG future info : range based on typical consumption and units (km|miles), here is an example 230w/Km
+		if int(float(usable_battery_level)) > 0:
+			consotypique=230
+			fullbatcapa=74 # in KwH
+			distance=int(float(fullbatcapa*1000/consotypique))
+			print(str(distance)+" Km")
+
 
 		
 		# Please send me a message :
