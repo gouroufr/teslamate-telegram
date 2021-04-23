@@ -34,9 +34,10 @@ locked = "❔" # not yet known
 text_locked = "❔" # not yet known
 temps_restant_charge = "❔" # not yet known
 text_energie = "❔" # not yet known
-usable_battery_level = "❔" # not yet known
+usable_battery_level = -1 # not yet known
 nouvelleinformation = False # global var to prevent redondant messages (is true only when new infos appears)
-minbat=5  # minimum battery level to not display alert message
+minbat=5  # minimum battery level that displays an alert message
+doors_state = "❔"  # we don't know yet if doors are opened or closed
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -76,7 +77,7 @@ if language == "FR":
 	brokerfailed = "❌ échec de connexion au broker MQTT"
 	majdispo = "🎁 une mise à jour est disponible"
 	etatendormie = "💤 est endormie"
-	etatonline = "✨ est connectée"
+	etatonline = "📶 est connectée"
 	etatsuspend = "🛏️ cherche à s'endormir"
 	etatcharge = "🔌 se recharge"
 	etatoffline = "🛰️ n'est pas connectée au réseau"
@@ -91,6 +92,8 @@ if language == "FR":
 	carislocked = "🔐 est verrouilée"
 	carisunlocked = "🔓 est déverrouilée"
 	lowbattery="Batterie faible"
+	dooropened="🕊️ Porte(s) ouverte(s)"
+	doorclosed="☑️ Portes fermées"
 elif language == "SP":
 	print("SPANISH language not available yet") # No text translation available would send empty messages, so we end here
 	exit(1)
@@ -100,7 +103,7 @@ else:
 	brokerfailed = "❌ Failed to connect to MQTT broker"
 	majdispo = "🎁 An update is available"
 	etatendormie = "💤 is asleep"
-	etatonline = "✨ is online"
+	etatonline = "📶 is online"
 	etatsuspend = "🛏️ trying to sleep"
 	etatcharge = "🔌 is charging"
 	etatoffline ="🛰️ is not connected"
@@ -115,7 +118,8 @@ else:
 	carislocked = "🔐 is locked"
 	carisunlocked = "🔓 is unlocked"
 	lowbattery="Low battery"
-
+	dooropened="🕊️ Door(s) opened"
+	doorclosed="☑️ Doors closed"
 
 # Partially based on example from https://pypi.org/project/paho-mqtt/
 # The callback for when the client receives a CONNACK response from the server.
@@ -129,18 +133,18 @@ def on_connect(client, userdata, flags, rc):
 
 
 	# Subscribing in on_connect() means that if we lose the connection and reconnect subscriptions will be renewed.
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/display_name")        # Call it the way you like
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/model")               # Either "S", "3", "X" or "Y"
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/odometer")            # in Km (todo conv in Miles for imperial fans) 
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/update_available")    # Gift ?
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/state")               # Dans quel état j'ère
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/locked")			   # boolean
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/exterior_color")      # usefull ! 
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/charge_energy_added") # in KwH
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/doors_open")
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/usable_battery_level")
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/display_name")         # Call it the way you like
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/model")                # Either "S", "3", "X" or "Y"
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/odometer")             # in Km (todo conv in Miles for imperial fans) 
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/update_available")     # Gift ?
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/state")                # Dans quel état j'ère
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/locked")			    # boolean
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/exterior_color")       # usefull ! 
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/charge_energy_added")  # in KwH
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/doors_open")			# Boolean
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/usable_battery_level") # percent
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/plugged_in")
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge")
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge")  # Hours
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/shift_state")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/latitude")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/longitude")
@@ -163,10 +167,13 @@ def on_message(client, userdata, msg):
 		global latitude
 		global longitude
 		global usable_battery_level
+		global doorclosed
+		global dooropened
+		global doors_state
 		now = datetime.now()
 		today = now.strftime("%d-%m-%Y %H:%M:%S")
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
-
+	
 
 		# Do not send any messages :
 		# --------------------------
@@ -177,7 +184,7 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude": longitude = str(msg.payload.decode())                        # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = str(msg.payload.decode())  # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
-			temps_restant_mqtt = msg.payload.decode()
+			temps_restant_mqtt = str(msg.payload.decode())
 			if float(temps_restant_mqtt) > 1:
 				nouvelleinformation = True     # Exception : send an update each time we get an updated ETA to full charge (debug)
 				temps_restant_heure = int(float(temps_restant_mqtt))
@@ -200,11 +207,9 @@ def on_message(client, userdata, msg):
 		## DEBUG future info : range based on typical consumption and units (km|miles), here is an example 230w/Km
 		if int(float(usable_battery_level)) > 0:
 			consotypique=230
-			fullbatcapa=74 # in KwH
+			fullbatcapa=74
 			distance=int(float(fullbatcapa*1000/consotypique))
-			print(str(distance)+" Km")
-
-
+			
 		
 		# Please send me a message :
 		# --------------------------
@@ -255,13 +260,9 @@ def on_message(client, userdata, msg):
 
 
 
-
-		# awaiting translation code modification	  	
-		#if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/doors_open":
-			# if str(msg.payload.decode()) == "false":
-			# 	text_state = "fermée"
-			#if str(msg.payload.decode()) == "true":
-			#	text_state = "ouverte"
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/doors_open":
+			if str(msg.payload.decode()) == "false": doors_state = doorclosed
+			elif str(msg.payload.decode()) == "true": doors_state = dooropened
 
 
 
@@ -271,12 +272,12 @@ def on_message(client, userdata, msg):
 				# standard message
 				text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				# Do we have some special infos to add to the standard message ?
+				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
-				if usable_battery_level != "❔" and int(usable_battery_level) > minbat:text_msg = text_msg+"🔋 "+usable_battery_level+" %"+crlf
-				else: text_msg = text_msg+"🛢️ "+usable_battery_level+" % "+lowbattery+crlf
-
-
+				if usable_battery_level != "❔" and int(usable_battery_level) > minbat:text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
+				else: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
+				if int(float(usable_battery_level)) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
 					
 				# timestamp to the message
 				text_msg = text_msg+crlf+str(today)
@@ -284,6 +285,7 @@ def on_message(client, userdata, msg):
 				# Send the message
 				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
+				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 
 				#	"<a href='https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+"'Localisation</a>"+crlf+"\    need to find out a way to send a map
