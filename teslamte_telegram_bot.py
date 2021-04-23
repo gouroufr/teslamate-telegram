@@ -5,10 +5,11 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210423-02"
+version = "Version 20210423-03"
 
 import os
 import time
+import math
 from datetime import datetime
 import json
 import requests
@@ -40,6 +41,7 @@ minbat=5  # minimum battery level that displays an alert message
 doors_state = "❔"  # we don't know yet if doors are opened or closed
 latitude = "❔"
 longitude = "❔"
+distance = -1
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -157,6 +159,7 @@ def on_connect(client, userdata, flags, rc):
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/longitude")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/speed")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/heading")
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km")
 
 # Overcharging static variables with infos collected each round
 def on_message(client, userdata, msg):
@@ -177,6 +180,7 @@ def on_message(client, userdata, msg):
 		global doorclosed
 		global dooropened
 		global doors_state
+		global distance
 		now = datetime.now()
 		today = now.strftime("%d-%m-%Y %H:%M:%S")
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
@@ -189,7 +193,8 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/odometer": km = str(msg.payload.decode())                                # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude": latitude = str(msg.payload.decode())                          # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude": longitude = str(msg.payload.decode())                        # Car is moving, don't bother the driver
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = str(msg.payload.decode())  # Car is moving, don't bother the driver
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = float(msg.payload.decode())  # Car is moving, don't bother the driver
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km": distance = math.floor(float(msg.payload.decode()))              # estimated range
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = str(msg.payload.decode())
 			if float(temps_restant_mqtt) > 1:
@@ -211,11 +216,6 @@ def on_message(client, userdata, msg):
 			kwhadded = msg.payload.decode()
 			text_energie = energieadded.replace("000", str(kwhadded))
 
-		## DEBUG future info : range based on typical consumption and units (km|miles), here is an example 230w/Km
-		if int(float(usable_battery_level)) > 0:
-			consotypique=230
-			fullbatcapa=74
-			distance=int(float(fullbatcapa*1000/consotypique))
 			
 		
 		# Please send me a message :
@@ -275,8 +275,7 @@ def on_message(client, userdata, msg):
 
 		if nouvelleinformation:
 			# Do we have enough informations to send a complete message ?
-			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔":
-				# standard message
+			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔" and distance > 0:
 				text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
@@ -284,7 +283,7 @@ def on_message(client, userdata, msg):
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
-				if int(usable_battery_level) > 0: text_msg = text_msg+"🏎️ "+str(distance)+" Km ("+str(int(float(distance/1.609)))+" miles)"+crlf
+				if distance > 0: text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km ("+str(math.floor(distance/1.609))+" miles)"+crlf
 
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
@@ -293,7 +292,7 @@ def on_message(client, userdata, msg):
 				text_msg = text_msg+crlf+str(today)
 
 				# Send the message
-				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
+				if distance > 0: bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
