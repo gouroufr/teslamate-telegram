@@ -64,17 +64,20 @@ else:
 if os.getenv('CAR_ID') == None:
 	print("No car identifier set, using first car in your Telsa account as default one." + crlf + "Please set CAR_ID if needed in environnement variables.")
 	CAR_ID = "1"  # more than one car is for rich people, so please donate... :-)
-else:
-	CAR_ID = os.getenv('CAR_ID')
-	# should test if entry is a number... (btw what is the max ?)
+else: CAR_ID = os.getenv('CAR_ID')
 
-if os.getenv('GPS') == None:
-	GPS = False  # default no
-else:
-	GPS = os.getenv('GPS')
+if os.getenv('GPS') == None: GPS = False
+else: GPS = os.getenv('GPS')
+if GPS == "True": GPS = True # make sure it is boolean
 
-	# TODO : add the Km ou Miles choice
-GPS = True
+# TODO : add the Km ou Miles choice
+if os.getenv('UNITS') == None: UNITS = "Km"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "km": UNITS = "Km"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "miles": UNITS = "Miles"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "metric": UNITS = "Km"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "imperial": UNITS = "Miles"
+
+
 # Text translation depends on a 2 letters code : 
 # FR : Français
 # EN : English
@@ -283,7 +286,8 @@ def on_message(client, userdata, msg):
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
-				if distance > 0: text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km ("+str(math.floor(distance/1.609))+" miles)"+crlf
+				if distance > 0 and UNITS == "km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
+				if distance > 0 and UNITS == "miles": text_msg = text_msg+"🏎️ "+str(math.floor(distance/1.609))+" miles"+crlf
 
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
