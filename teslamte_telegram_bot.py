@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210423-03"
+version = "Version 20210423-04"
 
 import os
 import time
@@ -70,13 +70,14 @@ if os.getenv('GPS') == None: GPS = False
 else: GPS = os.getenv('GPS')
 if GPS == "True": GPS = True # make sure it is boolean
 
-# TODO : add the Km ou Miles choice
+# Km ou Miles choice
 if os.getenv('UNITS') == None: UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "km": UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "miles": UNITS = "Miles"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "metric": UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "imperial": UNITS = "Miles"
 
+if os.getenv('DEBUG') != None: DEBUG = os.getenv('UNITS')
 
 # Text translation depends on a 2 letters code : 
 # FR : Français
