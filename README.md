@@ -7,11 +7,12 @@ Environnement variables :
 
       - MQTT_BROKER_HOST=mosquitto_IP                  # IP or FQDN 
       - MQTT_BROKER_PORT=mosquitto_PORT                # (default 1883)
-      - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx   # See Telegram doc
-      - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx            # See Telegram doc
+      - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx   # See Telegram doc https://core.telegram.org/
+      - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx            # See Telegram doc https://core.telegram.org/
       - LANGUAGE=EN                                    # FR (french) is also available (default ENglish)
       - GPS=True                                       # or False : includes car location map in Telegram message, default False
-      - CAR_ID=1                                       # Your "n"th Tesla car in your inventory... default 1st one
+      - CAR_ID=1                                       # Your "n"th car in your Tesla's inventory... default 1st one
+      - TIMESTAMP=bottom                               # prints the date at the [bottom|top|none] of each message, none won't prints the date
 
 
 
@@ -79,6 +80,7 @@ services:
       - LANGUAGE=EN                                    # FR (french) is also available (default ENglish)
       - GPS=True                                       # or False : includes car location map in Telegram message, default False
       - CAR_ID=1                                       # Your "n"th car in your Tesla's inventory... default 1st one
+      - TIMESTAMP=bottom                               # prints the date at the [bottom|top|none] of each message, none won't prints the date
 
 volumes:
   teslamate-db:
