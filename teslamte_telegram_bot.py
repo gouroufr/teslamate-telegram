@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210504-01"
+version = "Version 20210504-02"
 
 import os
 import time
@@ -83,7 +83,6 @@ if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "km": UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "miles": UNITS = "Miles"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "metric": UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "imperial": UNITS = "Miles"
-
 if os.getenv('DEBUG') != None: DEBUG = os.getenv('DEBUG')
 
 # Text translation depends on a 2 letters code : 
@@ -151,7 +150,6 @@ def on_connect(client, userdata, flags, rc):
 		print(brokerfailed)
 		bot.send_message(chat_id,text=brokerfailed,parse_mode=ParseMode.HTML)
 
-
 	# Subscribing in on_connect() means that if we lose the connection and reconnect subscriptions will be renewed.
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/display_name")         # Call it the way you like
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/model")                # Either "S", "3", "X" or "Y"
@@ -205,7 +203,7 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude": latitude = str(msg.payload.decode())                          # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude": longitude = str(msg.payload.decode())                        # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = float(msg.payload.decode())  # Car is moving, don't bother the driver
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km": distance = math.floor(float(msg.payload.decode()))              # estimated range
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km":distance = math.floor(float(msg.payload.decode()))              # estimated range
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = str(msg.payload.decode())
 			if float(temps_restant_mqtt) > 1:
@@ -286,10 +284,10 @@ def on_message(client, userdata, msg):
 
 		if nouvelleinformation:
 			# Do we have enough informations to send a complete message ?
-			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔" and distance > 0:
-				if TIMESTAMP == "top": text_msg = str(today) + crlf
-				else: text_msg = ""
-				text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
+			# if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔" and distance > 0:
+			if usable_battery_level != "❔" and distance > 0:
+				if TIMESTAMP == "top": text_msg = str(today) + crlf + pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
+				else: text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
@@ -304,10 +302,10 @@ def on_message(client, userdata, msg):
 
 				# bottom timestamp the message if needed
 				if TIMESTAMP == "bottom": text_msg = text_msg+crlf+str(today)
-
+			
 				# Send the message
-				if debug and distance > 0: print("DEBUG => Envoi du message via le Bot Telegram : " + crlf + str(text_msg))
-				if distance > 0: bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
+				if debug: print("DEBUG => Envoi du message via le Bot Telegram : " + crlf + str(text_msg))
+				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages

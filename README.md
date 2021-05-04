@@ -13,6 +13,7 @@ Environnement variables :
       - GPS=True                                       # or False : includes car location map in Telegram message, default False
       - CAR_ID=1                                       # Your "n"th car in your Tesla's inventory... default 1st one
       - TIMESTAMP=bottom                               # prints the date at the [bottom|top|none] of each message, none won't prints the date
+      - DEBUG=True                                     # Display on console the bot messages / default is false
 
 
 
