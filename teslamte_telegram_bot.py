@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210423-04"
+version = "Version 20210504-01"
 
 import os
 import time
@@ -45,30 +45,37 @@ distance = -1
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
-	print("Error: Please set the environment variable TELEGRAM_BOT_API_KEY and try again.")
+	print("Env Var Error: Please set the environment variable TELEGRAM_BOT_API_KEY and try again.")
 	exit(1)
 bot = Bot(os.getenv('TELEGRAM_BOT_API_KEY'))
 
 if os.getenv('TELEGRAM_BOT_CHAT_ID') == None:
-	print("Error: Please set the environment variable TELEGRAM_BOT_CHAT_ID and try again.")
+	print("Env Var Error: Please set the environment variable TELEGRAM_BOT_CHAT_ID and try again.")
 	exit(1)
 chat_id = os.getenv('TELEGRAM_BOT_CHAT_ID')
 
 
 # initializing the recommended variables (not mandatory so we won't complain)
 if os.getenv('LANGUAGE') == None:
-	print("No language selected, using ENglish as default." + crlf + "Currently available languages : EN, FR" + crlf + "Please set LANGUAGE in environnement variables.")
+	print("Env Var LANGUAGE : No language selected, using English as default. Please set LANGUAGE=[FR|EN] in environnement variables.")
 	language = "EN"
 else:
 	language = os.getenv('LANGUAGE')
 if os.getenv('CAR_ID') == None:
-	print("No car identifier set, using first car in your Telsa account as default one." + crlf + "Please set CAR_ID if needed in environnement variables.")
+	print("Env Var CAR_ID : No car identifier set, using first car in your Telsa account as default one. Please set CAR_ID=[1-9] in environnement variables.")
 	CAR_ID = "1"  # more than one car is for rich people, so please donate... :-)
 else: CAR_ID = os.getenv('CAR_ID')
 
-if os.getenv('GPS') == None: GPS = False
+if os.getenv('GPS') == None:
+	print("Env Var GPS : not set, by default GPS position (if known) will be sent. Please GPS=[True|False] in environnement variables.")
+	GPS = False
 else: GPS = os.getenv('GPS')
 if GPS == "True": GPS = True # make sure it is boolean
+
+if os.getenv('TIMESTAMP') == None:
+	print("Env Var TIMESTAMP : No TIMESTAMP defined. By default, time will be inserted at the end of the message. Please set TIMESTAMP=[top|bottom|none] in environnement variables.")
+	TIMESTAMP = "bottom"  # more than one car is for rich people, so please donate... :-)
+else: TIMESTAMP = os.getenv('TIMESTAMP').lower
 
 # Km ou Miles choice
 if os.getenv('UNITS') == None: UNITS = "Km"
@@ -77,7 +84,7 @@ if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "miles": UNITS = "
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "metric": UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "imperial": UNITS = "Miles"
 
-if os.getenv('DEBUG') != None: DEBUG = os.getenv('UNITS')
+if os.getenv('DEBUG') != None: DEBUG = os.getenv('DEBUG')
 
 # Text translation depends on a 2 letters code : 
 # FR : Français
@@ -280,6 +287,8 @@ def on_message(client, userdata, msg):
 		if nouvelleinformation:
 			# Do we have enough informations to send a complete message ?
 			if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔" and distance > 0:
+				if TIMESTAMP == "top": text_msg = str(today) + crlf
+				else: text_msg = ""
 				text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
@@ -293,10 +302,11 @@ def on_message(client, userdata, msg):
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
 
-				# timestamp the message
-				text_msg = text_msg+crlf+str(today)
+				# bottom timestamp the message if needed
+				if TIMESTAMP == "bottom": text_msg = text_msg+crlf+str(today)
 
 				# Send the message
+				if debug and distance > 0: print("DEBUG => Envoi du message via le Bot Telegram : " + crlf + str(text_msg))
 				if distance > 0: bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
