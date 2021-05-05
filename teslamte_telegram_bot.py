@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210504-02"
+version = "Version 20210505-01"
 
 import os
 import time
@@ -65,17 +65,14 @@ if os.getenv('CAR_ID') == None:
 	print("Env Var CAR_ID : No car identifier set, using first car in your Telsa account as default one. Please set CAR_ID=[1-9] in environnement variables.")
 	CAR_ID = "1"  # more than one car is for rich people, so please donate... :-)
 else: CAR_ID = os.getenv('CAR_ID')
-
 if os.getenv('GPS') == None:
 	print("Env Var GPS : not set, by default GPS position (if known) will be sent. Please GPS=[True|False] in environnement variables.")
 	GPS = False
-else: GPS = os.getenv('GPS')
-if GPS == "True": GPS = True # make sure it is boolean
+else: GPS = True
 
-if os.getenv('TIMESTAMP') == None:
-	print("Env Var TIMESTAMP : No TIMESTAMP defined. By default, time will be inserted at the end of the message. Please set TIMESTAMP=[top|bottom|none] in environnement variables.")
-	TIMESTAMP = "bottom"  # more than one car is for rich people, so please donate... :-)
-else: TIMESTAMP = os.getenv('TIMESTAMP').lower
+if os.getenv('TIMESTAMP') == None: TIMESTAMP = "bottom"
+if os.getenv('TIMESTAMP') != None: TIMESTAMP = os.getenv('TIMESTAMP').lower
+if debug == True: print(TIMESTAMP)
 
 # Km ou Miles choice
 if os.getenv('UNITS') == None: UNITS = "Km"
@@ -83,7 +80,9 @@ if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "km": UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "miles": UNITS = "Miles"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "metric": UNITS = "Km"
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "imperial": UNITS = "Miles"
+
 if os.getenv('DEBUG') != None: DEBUG = os.getenv('DEBUG')
+print('Debug mode : '+str(debug))
 
 # Text translation depends on a 2 letters code : 
 # FR : Français
@@ -150,6 +149,7 @@ def on_connect(client, userdata, flags, rc):
 		print(brokerfailed)
 		bot.send_message(chat_id,text=brokerfailed,parse_mode=ParseMode.HTML)
 
+
 	# Subscribing in on_connect() means that if we lose the connection and reconnect subscriptions will be renewed.
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/display_name")         # Call it the way you like
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/model")                # Either "S", "3", "X" or "Y"
@@ -167,8 +167,9 @@ def on_connect(client, userdata, flags, rc):
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/latitude")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/longitude")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/speed")
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/heading")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km")
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/heading")
+	
 
 # Overcharging static variables with infos collected each round
 def on_message(client, userdata, msg):
@@ -190,6 +191,7 @@ def on_message(client, userdata, msg):
 		global dooropened
 		global doors_state
 		global distance
+		global debug
 		now = datetime.now()
 		today = now.strftime("%d-%m-%Y %H:%M:%S")
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
@@ -203,7 +205,7 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/latitude": latitude = str(msg.payload.decode())                          # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/longitude": longitude = str(msg.payload.decode())                        # Car is moving, don't bother the driver
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/usable_battery_level": usable_battery_level = float(msg.payload.decode())  # Car is moving, don't bother the driver
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km":distance = math.floor(float(msg.payload.decode()))              # estimated range
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km": distance = math.floor(float(msg.payload.decode()))              # estimated range
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = str(msg.payload.decode())
 			if float(temps_restant_mqtt) > 1:
@@ -281,13 +283,13 @@ def on_message(client, userdata, msg):
 			elif str(msg.payload.decode()) == "true": doors_state = dooropened
 
 
-
-		if nouvelleinformation:
+		if nouvelleinformation == True:
 			# Do we have enough informations to send a complete message ?
 			# if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔" and distance > 0:
-			if usable_battery_level != "❔" and distance > 0:
+			if distance > 0:
 				if TIMESTAMP == "top": text_msg = str(today) + crlf + pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				else: text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
+
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
@@ -297,15 +299,17 @@ def on_message(client, userdata, msg):
 				if distance > 0 and UNITS == "km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
 				if distance > 0 and UNITS == "miles": text_msg = text_msg+"🏎️ "+str(math.floor(distance/1.609))+" miles"+crlf
 
+
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
 
 				# bottom timestamp the message if needed
 				if TIMESTAMP == "bottom": text_msg = text_msg+crlf+str(today)
-			
+				
+
 				# Send the message
-				if debug: print("DEBUG => Envoi du message via le Bot Telegram : " + crlf + str(text_msg))
-				bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
+				if debug == True and distance > 0: print("DEBUG => Envoi du message via le Bot Telegram : " + crlf + "-----------------------" +crlf +str(text_msg) + crlf + "-----------------------" + crlf)
+				if distance > 0: bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
