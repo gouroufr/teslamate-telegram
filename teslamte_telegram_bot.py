@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210505-01"
+version = "Version 20210505-02"
 
 import os
 import time
