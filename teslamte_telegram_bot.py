@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 # BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210505-02"
+version = "Version 20210505-03"
 
 import os
 import time
@@ -322,6 +322,15 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
+
+client.username_pw_set
+if os.getenv('MQTT_BROKER_USERNAME') == None:
+    pass
+else:
+    if os.getenv('MQTT_BROKER_PASSWORD') == None:
+        client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''))
+    else:
+        client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''), os.getenv('MQTT_BROKER_PASSWORD', ''))
 
 
 client.connect(os.getenv('MQTT_BROKER_HOST'),int(os.getenv('MQTT_BROKER_PORT', 1883)), 60)
