@@ -78,6 +78,8 @@ services:
     environment:
       - MQTT_BROKER_HOST=mosquitto_IP                  # IP or FQDN 
       - MQTT_BROKER_PORT=mosquitto_PORT                # (default 1883)
+      - MQTT_BROKER_USERNAME=username                  # (optional)
+      - MQTT_BROKER_PASSWORD=password                  # (optional)
       - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx   # See Telegram doc https://core.telegram.org/
       - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx            # See Telegram doc https://core.telegram.org/
       - LANGUAGE=EN                                    # FR (french) is also available (default ENglish)
