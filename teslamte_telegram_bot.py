@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210507-07"
+version = "Version 20210507-08"
 
 import os
 import time
@@ -41,6 +41,7 @@ longitude = "❔"
 DEBUG = "❔"
 UNITS = "❔"
 distance = -1
+tirets = "--------------------------------------------"
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
@@ -63,15 +64,12 @@ else:
 if os.getenv('CAR_ID') == None:
 	CAR_ID = "1"  # more than one car is for rich people, so please donate... :-)
 else: CAR_ID = os.getenv('CAR_ID')
-if os.getenv('GPS') == None:
-	
-	GPS = False
+
+if os.getenv('GPS') == None: GPS = False
 else: GPS = True
 
 if os.getenv('TIMESTAMP') == None: HORODATAGE = "bottom"
 if os.getenv('TIMESTAMP') != None: HORODATAGE = os.getenv('TIMESTAMP').lower()
-
-if DEBUG: print("conv lower OK")
 
 # Km ou Miles choice
 if os.getenv('UNITS') == None: UNITS = "Km"
@@ -85,14 +83,14 @@ if DEBUG == "True": DEBUG = True
 else: DEBUG = False
 
 # Status print
-print ("--------------------------------------------")
+print (tirets)
 print("Env Var CAR_ID    : " + str(CAR_ID))
 print("Env Var LANGUAGE  : " + str(language))
 print("Env Var GPS       : " + str(GPS))
 print("Env Var TIMESTAMP : " + str(HORODATAGE))
 print("Env Var UNITS     : " + str(UNITS))
-print('Mode DEBUG        : '+str(DEBUG))
-print ("--------------------------------------------" + crlf)
+print("Mode DEBUG        : " + str(DEBUG))
+print (tirets + crlf)
 
 # Text translation depends on a 2 letters code : 
 # FR : Français
@@ -301,17 +299,12 @@ def on_message(client, userdata, msg):
 
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
-				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee:
-					text_msg = text_msg+chargeterminee+crlf
-					text_msg = text_msg+text_energie+crlf
-				if etat_connu == str(etatcharge) and temps_restant_charge != "❔":
-					text_msg = text_msg+temps_restant_charge+crlf
-					text_msg = text_msg+text_energie+crlf
+				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf+text_energie+crlf
+				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf+text_energie+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
 				if distance > 0 and UNITS == "km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
 				if distance > 0 and UNITS == "miles": text_msg = text_msg+"🏎️ "+str(math.floor(distance/1.609))+" miles"+crlf
-
 
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
@@ -322,7 +315,7 @@ def on_message(client, userdata, msg):
 				if DEBUG: print("According to HORODATAGE var (" + HORODATAGE + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)				
 
 				# Send the message
-				if DEBUG == True and distance > 0: print("DEBUG : Message sent to Telegram Bot : " + crlf + "-----------------------" +crlf +str(text_msg) + crlf + "-----------------------" + crlf)
+				if DEBUG == True and distance > 0: print("DEBUG : Message sent to Telegram Bot : " + crlf + tirets +crlf +str(text_msg) + crlf + tirets + crlf)
 				if distance > 0: bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
@@ -341,11 +334,8 @@ client.username_pw_set
 if os.getenv('MQTT_BROKER_USERNAME') == None:
     pass
 else:
-    if os.getenv('MQTT_BROKER_PASSWORD') == None:
-        client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''))
-    else:
-        client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''), os.getenv('MQTT_BROKER_PASSWORD', ''))
-
+    if os.getenv('MQTT_BROKER_PASSWORD') == None: client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''))
+    else: client.username_pw_set(os.getenv('MQTT_BROKER_USERNAME', ''), os.getenv('MQTT_BROKER_PASSWORD', ''))
 
 client.connect(os.getenv('MQTT_BROKER_HOST'),int(os.getenv('MQTT_BROKER_PORT', 1883)), 60)
 client.loop_start()  # start the loop
