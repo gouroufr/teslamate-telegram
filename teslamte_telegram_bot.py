@@ -69,7 +69,7 @@ if os.getenv('GPS') == None:
 else: GPS = True
 
 if os.getenv('TIMESTAMP') == None: HORODATAGE = "bottom"
-if os.getenv('TIMESTAMP') != None: HORODATAGE = os.getenv('HORODATAGE').lower
+if os.getenv('TIMESTAMP') != None: HORODATAGE = os.getenv('TIMESTAMP').lower
 
 
 # Km ou Miles choice
