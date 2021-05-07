@@ -4,18 +4,18 @@ This is a TESLAMATE complement that sends updates to a Telegram chat.
 
 
 Environnement variables : 
-
       - MQTT_BROKER_HOST=mosquitto_IP                  # IP or FQDN 
-      - MQTT_BROKER_PORT=mosquitto_PORT                # (default 1883)
+      - MQTT_BROKER_PORT=mosquitto_PORT                # (optional) default 1883
       - MQTT_BROKER_USERNAME=username                  # (optional)
       - MQTT_BROKER_PASSWORD=password                  # (optional)
       - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx   # See Telegram doc https://core.telegram.org/
       - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx            # See Telegram doc https://core.telegram.org/
-      - LANGUAGE=EN                                    # FR (french) is also available (default ENglish)
-      - GPS=True                                       # or False : includes car location map in Telegram message, default False
-      - CAR_ID=1                                       # Your "n"th car in your Tesla's inventory... default 1st one
-      - TIMESTAMP=bottom                               # prints the date at the [bottom|top|none] of each message, none won't prints the date
-      - DEBUG=True                                     # Display on console the bot messages / default is false
+      - LANGUAGE=EN                                    # (optional) FR (french) / EN (English - default) / Please PR for other languages / [EN|FR]
+      - GPS=True                                       # (optional) includes car location map in Telegram message, default False [True|False]
+      - CAR_ID=1                                       # (optional) Your "n"th car in your Tesla's inventory... default 1st one [1-9]
+      - TIMESTAMP=bottom                               # (optional) prints the date at the [bottom|top|none] of each message, none won't prints the date.Bottom defaults
+      - UNITS=Km                                       # (optional) Metric or Imperial measurement display [Km|Miles] or [Metric|Imperial] metric defaults
+      - DEBUG=True                                     # (optional) Display on console the bot messages / default is false
 
 
 
@@ -77,15 +77,17 @@ services:
     restart: always
     environment:
       - MQTT_BROKER_HOST=mosquitto_IP                  # IP or FQDN 
-      - MQTT_BROKER_PORT=mosquitto_PORT                # (default 1883)
+      - MQTT_BROKER_PORT=mosquitto_PORT                # (optional) default 1883
       - MQTT_BROKER_USERNAME=username                  # (optional)
       - MQTT_BROKER_PASSWORD=password                  # (optional)
       - TELEGRAM_BOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx   # See Telegram doc https://core.telegram.org/
       - TELEGRAM_BOT_CHAT_ID=xxxxxxxxxxxxxx            # See Telegram doc https://core.telegram.org/
-      - LANGUAGE=EN                                    # FR (french) is also available (default ENglish)
-      - GPS=True                                       # or False : includes car location map in Telegram message, default False
-      - CAR_ID=1                                       # Your "n"th car in your Tesla's inventory... default 1st one
-      - TIMESTAMP=bottom                               # prints the date at the [bottom|top|none] of each message, none won't prints the date
+      - LANGUAGE=EN                                    # (optional) FR (french) / EN (English - default) / Please PR for other languages / [EN|FR]
+      - GPS=True                                       # (optional) includes car location map in Telegram message, default False [True|False]
+      - CAR_ID=1                                       # (optional) Your "n"th car in your Tesla's inventory... default 1st one [1-9]
+      - TIMESTAMP=bottom                               # (optional) prints the date at the [bottom|top|none] of each message, none won't prints the date.Bottom defaults
+      - UNITS=Km                                       # (optional) Metric or Imperial measurement display [Km|Miles] or [Metric|Imperial] metric defaults
+      - DEBUG=True                                     # (optional) Display on console the bot messages / default is false
 
 volumes:
   teslamate-db:
@@ -102,4 +104,4 @@ All is free software under GPL licence.
 
 Donations are welcome :
 
-send bitcoins to 15DbfoLVmJ1iwHGnaeB25NBD2kE393XZZD or register and have fun (Caution: it's free, so you'll never become rich !) for free with this referral link : https://freebitco.in/?r=36618348&tag=ghteslamatetg
+send bitcoins to 15DbfoLVmJ1iwHGnaeB25NBD2kE393XZZD or register and play/have fun for free here with this referral link : https://freebitco.in/?r=36618348&tag=ghteslamatetg

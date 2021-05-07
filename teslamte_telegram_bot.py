@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210507-06"
+version = "Version 20210507-07"
 
 import os
 import time
@@ -221,21 +221,18 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = str(msg.payload.decode())
 			if float(temps_restant_mqtt) > 1:
-				nouvelleinformation = True     # Exception : send an update each time we get an updated ETA to full charge (debug)
+				nouvelleinformation = True    			 	# Send an update each time we get an updated ETA to full charge (debug)
 				temps_restant_heure = int(float(temps_restant_mqtt))
 				temps_restant_minute = int(float(round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)))
-				texte_minute = minute if temps_restant_minute < 2 else minute + "" + plurialsuffix
-				if temps_restant_heure == 1:
-					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+texte_minute
-				elif temps_restant_heure == 0:
-					temps_restant_charge = "⏳ "+str(temps_restant_minute)+" "+texte_minute
-				else:
-					temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure +"" + plurialsuffix + " "+str(temps_restant_minute)+" "+texte_minute
-			if int(float(temps_restant_mqtt) * 60 ) == 0:
-				temps_restant_charge = chargeterminee
-				nouvelleinformation = True     # Exception : We should tell the user the car is charged
+				if temps_restant_minute > 1: minute = minute + plurialsuffix
+				if temps_restant_heure > 1: heure = heure + plurialsuffix
+				temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+ minute
 
-		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/charge_energy_added":                                                  # Collect infos but don't send a message NOW
+			if int(float(temps_restant_mqtt)) == 0:
+				temps_restant_charge = chargeterminee
+				nouvelleinformation = True     				# Should we tell the user the car is charged ? :-)
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/charge_energy_added":                                                # Collect infos but don't send a message NOW
 			kwhadded = msg.payload.decode()
 			text_energie = energieadded.replace("000", str(kwhadded))
 
@@ -304,8 +301,12 @@ def on_message(client, userdata, msg):
 
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
-				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf
-				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf
+				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee:
+					text_msg = text_msg+chargeterminee+crlf
+					text_msg = text_msg+text_energie+crlf
+				if etat_connu == str(etatcharge) and temps_restant_charge != "❔":
+					text_msg = text_msg+temps_restant_charge+crlf
+					text_msg = text_msg+text_energie+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
 				if distance > 0 and UNITS == "km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
