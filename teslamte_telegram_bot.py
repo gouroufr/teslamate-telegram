@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210507-01"
+version = "Version 20210507-02"
 
 import os
 import time
@@ -68,8 +68,8 @@ if os.getenv('GPS') == None:
 	GPS = False
 else: GPS = True
 
-if os.getenv('TIMESTAMP') == None: TIMESTAMP = "bottom"
-if os.getenv('TIMESTAMP') != None: TIMESTAMP = os.getenv('TIMESTAMP').lower
+if os.getenv('TIMESTAMP') == None: HORODATAGE = "bottom"
+if os.getenv('TIMESTAMP') != None: HORODATAGE = os.getenv('HORODATAGE').lower
 
 
 # Km ou Miles choice
@@ -88,7 +88,7 @@ print ("--------------------------------------------")
 print("Env Var CAR_ID    : " + CAR_ID)
 print("Env Var LANGUAGE  : " + language)
 print("Env Var GPS       : " + str(GPS))
-print("Env Var TIMESTAMP : " + TIMESTAMP)
+print("Env Var TIMESTAMP : " + str(HORODATAGE))
 print("Env Var UNITS     : " + UNITS)
 print('Mode DEBUG        : '+str(DEBUG))
 print ("--------------------------------------------" + crlf)
@@ -200,7 +200,7 @@ def on_message(client, userdata, msg):
 		global distance
 		global DEBUG
 		global GPS
-		global TIMESTAMP
+		global HORODATAGE
 		global CAR_ID
 		global UNITS
 		now = datetime.now()
@@ -298,9 +298,9 @@ def on_message(client, userdata, msg):
 			# Do we have enough informations to send a complete message ?
 			# if pseudo != "❔" and model != "❔" and etat_connu != "❔" and locked != "❔" and usable_battery_level != "❔" and latitude != "❔" and longitude != "❔" and distance > 0:
 			if distance > 0:
-				if TIMESTAMP == "top": text_msg = str(today) + crlf + pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
+				if HORODATAGE == "top": text_msg = str(today) + crlf + pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				else: text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
-				if DEBUG: print("According to TIMESTAMP var (" + TIMESTAMP + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
+				if DEBUG: print("According to HORODATAGE var (" + HORODATAGE + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
@@ -316,9 +316,9 @@ def on_message(client, userdata, msg):
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
 				if DEBUG: print("According to GPS var (" + str(GPS) + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
-				# bottom timestamp the message if needed
-				if TIMESTAMP == "bottom": text_msg = text_msg+crlf+str(today)
-				if DEBUG: print("According to TIMESTAMP var (" + TIMESTAMP + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)				
+				# bottom HORODATAGE the message if needed
+				if HORODATAGE == "bottom": text_msg = text_msg+crlf+str(today)
+				if DEBUG: print("According to HORODATAGE var (" + HORODATAGE + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)				
 
 				# Send the message
 				if DEBUG == True and distance > 0: print("DEBUG : Message sent to Telegram Bot : " + crlf + "-----------------------" +crlf +str(text_msg) + crlf + "-----------------------" + crlf)
