@@ -3,25 +3,22 @@
 # By Gouroufr inspired by https://github.com/JakobLichterfeld/TeslaMate_Telegram_Bot
 # Modified to be able to run without the API REST... we've got all infos we needed in the broker messages
 # Add translation to texts : Open call for other languages !
-# BETA version 0.81 on april 23th, 2021 / copyleft Laurent alias gouroufr
 
-version = "Version 20210505-03"
+# BETA version / copyleft Laurent alias gouroufr
+version = "Version 20210507-01"
 
 import os
 import time
 import math
-from datetime import datetime
 import json
 import requests
-
 import paho.mqtt.client as mqtt
+import pdb, traceback, sys
 
+from datetime import datetime
 from telegram.bot import Bot
 from telegram.parsemode import ParseMode
 
-# debug
-import pdb, traceback, sys
-debug = False  # internal use, should be deleted before or at least false when going to production/publish
 send_current_location = False
 
 # Static variables
@@ -41,38 +38,39 @@ minbat=5  # minimum battery level that displays an alert message
 doors_state = "❔"  # we don't know yet if doors are opened or closed
 latitude = "❔"
 longitude = "❔"
+DEBUG = "❔"
+UNITS = "❔"
 distance = -1
 
 # initializing the mandatory variables and cry if needed
 if os.getenv('TELEGRAM_BOT_API_KEY') == None:
-	print("Env Var Error: Please set the environment variable TELEGRAM_BOT_API_KEY and try again.")
+	print("Env Var missing ERROR : Please set the environment variable TELEGRAM_BOT_API_KEY and try again.")
 	exit(1)
 bot = Bot(os.getenv('TELEGRAM_BOT_API_KEY'))
 
 if os.getenv('TELEGRAM_BOT_CHAT_ID') == None:
-	print("Env Var Error: Please set the environment variable TELEGRAM_BOT_CHAT_ID and try again.")
+	print("Env Var missing ERROR : Please set the environment variable TELEGRAM_BOT_CHAT_ID and try again.")
 	exit(1)
 chat_id = os.getenv('TELEGRAM_BOT_CHAT_ID')
 
 
 # initializing the recommended variables (not mandatory so we won't complain)
 if os.getenv('LANGUAGE') == None:
-	print("Env Var LANGUAGE : No language selected, using English as default. Please set LANGUAGE=[FR|EN] in environnement variables.")
 	language = "EN"
 else:
 	language = os.getenv('LANGUAGE')
+
 if os.getenv('CAR_ID') == None:
-	print("Env Var CAR_ID : No car identifier set, using first car in your Telsa account as default one. Please set CAR_ID=[1-9] in environnement variables.")
 	CAR_ID = "1"  # more than one car is for rich people, so please donate... :-)
 else: CAR_ID = os.getenv('CAR_ID')
 if os.getenv('GPS') == None:
-	print("Env Var GPS : not set, by default GPS position (if known) will be sent. Please GPS=[True|False] in environnement variables.")
+	
 	GPS = False
 else: GPS = True
 
 if os.getenv('TIMESTAMP') == None: TIMESTAMP = "bottom"
 if os.getenv('TIMESTAMP') != None: TIMESTAMP = os.getenv('TIMESTAMP').lower
-if debug == True: print(TIMESTAMP)
+
 
 # Km ou Miles choice
 if os.getenv('UNITS') == None: UNITS = "Km"
@@ -82,7 +80,18 @@ if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "metric": UNITS = 
 if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "imperial": UNITS = "Miles"
 
 if os.getenv('DEBUG') != None: DEBUG = os.getenv('DEBUG')
-print('Debug mode : '+str(debug))
+if DEBUG == "True": DEBUG = True
+else: DEBUG = False
+
+# Status print
+print ("--------------------------------------------")
+print("Env Var CAR_ID    : " + CAR_ID)
+print("Env Var LANGUAGE  : " + language)
+print("Env Var GPS       : " + str(GPS))
+print("Env Var TIMESTAMP : " + TIMESTAMP)
+print("Env Var UNITS     : " + UNITS)
+print('Mode DEBUG        : '+str(DEBUG))
+print ("--------------------------------------------" + crlf)
 
 # Text translation depends on a 2 letters code : 
 # FR : Français
@@ -90,7 +99,6 @@ print('Debug mode : '+str(debug))
 # SP : -not implemented-
 # Call for volunteers => Please provide PR with other languages
 if language == "FR":
-	print("FRENCH language set")
 	contobroker = "✔️ connecté au broker MQTT avec succès"+crlf+version
 	brokerfailed = "❌ échec de connexion au broker MQTT"
 	majdispo = "🎁 une mise à jour est disponible"
@@ -114,9 +122,8 @@ if language == "FR":
 	doorclosed="☑️ Portes fermées"
 elif language == "SP":
 	print("SPANISH language not available yet") # No text translation available would send empty messages, so we end here
-	exit(1)
+	exit(1)                                     # implemented here as an example for Pull Requests for additionnal languages
 else:
-	print("ENGLISH language set")
 	contobroker = "✔️ successfully connected to MQTT broker"
 	brokerfailed = "❌ Failed to connect to MQTT broker"
 	majdispo = "🎁 An update is available"
@@ -191,7 +198,11 @@ def on_message(client, userdata, msg):
 		global dooropened
 		global doors_state
 		global distance
-		global debug
+		global DEBUG
+		global GPS
+		global TIMESTAMP
+		global CAR_ID
+		global UNITS
 		now = datetime.now()
 		today = now.strftime("%d-%m-%Y %H:%M:%S")
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
@@ -289,6 +300,7 @@ def on_message(client, userdata, msg):
 			if distance > 0:
 				if TIMESTAMP == "top": text_msg = str(today) + crlf + pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				else: text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
+				if DEBUG: print("According to TIMESTAMP var (" + TIMESTAMP + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
@@ -302,13 +314,14 @@ def on_message(client, userdata, msg):
 
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
+				if DEBUG: print("According to GPS var (" + str(GPS) + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				# bottom timestamp the message if needed
 				if TIMESTAMP == "bottom": text_msg = text_msg+crlf+str(today)
-				
+				if DEBUG: print("According to TIMESTAMP var (" + TIMESTAMP + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)				
 
 				# Send the message
-				if debug == True and distance > 0: print("DEBUG => Envoi du message via le Bot Telegram : " + crlf + "-----------------------" +crlf +str(text_msg) + crlf + "-----------------------" + crlf)
+				if DEBUG == True and distance > 0: print("DEBUG : Message sent to Telegram Bot : " + crlf + "-----------------------" +crlf +str(text_msg) + crlf + "-----------------------" + crlf)
 				if distance > 0: bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
 				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
