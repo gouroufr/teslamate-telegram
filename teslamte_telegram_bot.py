@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210507-04"
+version = "Version 20210507-05"
 
 import os
 import time
@@ -85,11 +85,11 @@ else: DEBUG = False
 
 # Status print
 print ("--------------------------------------------")
-print("Env Var CAR_ID    : " + CAR_ID)
-print("Env Var LANGUAGE  : " + language)
+print("Env Var CAR_ID    : " + str(CAR_ID))
+print("Env Var LANGUAGE  : " + str(language))
 print("Env Var GPS       : " + str(GPS))
 print("Env Var TIMESTAMP : " + str(HORODATAGE))
-print("Env Var UNITS     : " + UNITS)
+print("Env Var UNITS     : " + str(UNITS))
 print('Mode DEBUG        : '+str(DEBUG))
 print ("--------------------------------------------" + crlf)
 
