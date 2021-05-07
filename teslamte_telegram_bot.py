@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210507-05"
+version = "Version 20210507-06"
 
 import os
 import time
@@ -69,15 +69,16 @@ if os.getenv('GPS') == None:
 else: GPS = True
 
 if os.getenv('TIMESTAMP') == None: HORODATAGE = "bottom"
-if os.getenv('TIMESTAMP') != None: HORODATAGE = os.getenv('TIMESTAMP').lower
+if os.getenv('TIMESTAMP') != None: HORODATAGE = os.getenv('TIMESTAMP').lower()
 
+if DEBUG: print("conv lower OK")
 
 # Km ou Miles choice
 if os.getenv('UNITS') == None: UNITS = "Km"
-if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "km": UNITS = "Km"
-if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "miles": UNITS = "Miles"
-if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "metric": UNITS = "Km"
-if os.getenv('UNITS') != None and os.getenv('UNITS').lower == "imperial": UNITS = "Miles"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower() == "km": UNITS = "Km"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower() == "miles": UNITS = "Miles"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower() == "metric": UNITS = "Km"
+if os.getenv('UNITS') != None and os.getenv('UNITS').lower() == "imperial": UNITS = "Miles"
 
 if os.getenv('DEBUG') != None: DEBUG = os.getenv('DEBUG')
 if DEBUG == "True": DEBUG = True
@@ -239,7 +240,6 @@ def on_message(client, userdata, msg):
 			text_energie = energieadded.replace("000", str(kwhadded))
 
 			
-		
 		# Please send me a message :
 		# --------------------------
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/update_available":
