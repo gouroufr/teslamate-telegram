@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210507-08"
+version = "Version 20210508-01"
 
 import os
 import time
@@ -35,11 +35,15 @@ text_energie = "❔" # not yet known
 usable_battery_level = -1 # not yet known
 nouvelleinformation = False # global var to prevent redondant messages (is true only when new infos appears)
 minbat=5  # minimum battery level that displays an alert message
-doors_state = "❔"  # we don't know yet if doors are opened or closed
+doors_state = "❔" 
+windows_state = "❔" 
+trunk_state = "❔" 
+frunk_state = "❔" 
 latitude = "❔"
 longitude = "❔"
 DEBUG = "❔"
 UNITS = "❔"
+
 distance = -1
 tirets = "--------------------------------------------"
 
@@ -119,6 +123,13 @@ if language == "FR":
 	lowbattery="Batterie faible"
 	dooropened="🕊️ Porte(s) ouverte(s)"
 	doorclosed="☑️ Portes fermées"
+	windowsopened="🕊️ Fenêtre(s) ouverte(s)"
+	windowsclosed="☑️ Fenêtres fermées"
+	trunkopened="🕊️ Coffre ouvert"
+	trunkclosed="☑️ Coffre fermé"
+	frunkopened="🕊️ Frunk ouvert"
+	frunkclosed="☑️ Frunk fermé"
+
 elif language == "SP":
 	print("SPANISH language not available yet") # No text translation available would send empty messages, so we end here
 	exit(1)                                     # implemented here as an example for Pull Requests for additionnal languages
@@ -144,6 +155,13 @@ else:
 	lowbattery="Low battery"
 	dooropened="🕊️ Door(s) opened"
 	doorclosed="☑️ Doors closed"
+	windowsopened="🕊️ Windows(s) opened"
+	windowsclosed="☑️ Windows closed"
+	trunkopened="🕊️ Trunk is opened"
+	trunkclosed="☑️ Trunk is closed"
+	frunkopened="🕊️ Frunk is opened"
+	frunkclosed="☑️ Frunk is closed"
+
 
 # Partially based on example from https://pypi.org/project/paho-mqtt/
 # The callback for when the client receives a CONNACK response from the server.
@@ -163,9 +181,12 @@ def on_connect(client, userdata, flags, rc):
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/update_available")     # Gift ?
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/state")                # Dans quel état j'ère
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/locked")			    # boolean
-	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/exterior_color")       # usefull ! 
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/exterior_color")       # usefull ??? 
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/charge_energy_added")  # in KwH
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/doors_open")			# Boolean
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/windows_open")			# Boolean
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/trunk_open")			# Boolean
+	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/frunk_open")			# Boolean
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/usable_battery_level") # percent
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/plugged_in")
 	client.subscribe("teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge")  # Hours
@@ -196,6 +217,15 @@ def on_message(client, userdata, msg):
 		global doorclosed
 		global dooropened
 		global doors_state
+		global frunk_state
+		global frunkopened
+		global frunkclosed
+		global trunkclosed
+		global trunkopened
+		global windowsclosed
+		global windowsopened
+		global trunk_state
+		global windows_state
 		global distance
 		global DEBUG
 		global GPS
@@ -282,11 +312,22 @@ def on_message(client, userdata, msg):
 				if str(locked) == "true": text_locked = carislocked
 				if str(locked) == "false": text_locked = carisunlocked
 
-
-
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/doors_open":
 			if str(msg.payload.decode()) == "false": doors_state = doorclosed
 			elif str(msg.payload.decode()) == "true": doors_state = dooropened
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/trunk_open":
+			if str(msg.payload.decode()) == "false": trunk_state = trunkclosed
+			elif str(msg.payload.decode()) == "true": trunk_state = trunkopened
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/frunk_open":
+			if str(msg.payload.decode()) == "false": frunk_state = frunkclosed
+			elif str(msg.payload.decode()) == "true": frunk_state = frunkopened
+
+		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/windows_open":	
+			if str(msg.payload.decode()) == "false": windows_state = windowsclosed
+			elif str(msg.payload.decode()) == "true": windows_state = windowsopened
+
 
 
 		if nouvelleinformation == True:
@@ -299,12 +340,17 @@ def on_message(client, userdata, msg):
 
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
+				if windows_state != "❔": text_msg = text_msg+windows_state+crlf
+				if trunk_state != "❔": text_msg = text_msg+trunk_state+crlf
+				if frunk_state != "❔": text_msg = text_msg+frunk_state+crlf
+				if DEBUG: print("According to boolean var about doors/windows/trunk/frunk the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
+
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf+text_energie+crlf
 				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf+text_energie+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
-				if distance > 0 and UNITS == "km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
-				if distance > 0 and UNITS == "miles": text_msg = text_msg+"🏎️ "+str(math.floor(distance/1.609))+" miles"+crlf
+				if distance > 0 and UNITS == "Km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
+				if distance > 0 and UNITS == "Miles": text_msg = text_msg+"🏎️ "+str(math.floor(distance/1.609))+" miles"+crlf
 
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
@@ -317,7 +363,7 @@ def on_message(client, userdata, msg):
 				# Send the message
 				if DEBUG == True and distance > 0: print("DEBUG : Message sent to Telegram Bot : " + crlf + tirets +crlf +str(text_msg) + crlf + tirets + crlf)
 				if distance > 0: bot.send_message(chat_id,text=str(text_msg),parse_mode=ParseMode.HTML,)
-				nouvelleinformation = False  # we reset this to false since we've just sent an update to the user
+				nouvelleinformation = False  # we reset this to false since we've just sent a message to the user (dont spam)
 				del temps_restant_charge     # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 				temps_restant_charge = "❔"  # reset the computed time to full charge to unkown state to prevent redondant and not updated messages
 
