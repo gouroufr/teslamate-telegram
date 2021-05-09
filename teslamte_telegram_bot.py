@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210508-01"
+version = "Version 20210509-01"
 
 import os
 import time
@@ -134,7 +134,7 @@ elif language == "SP":
 	print("SPANISH language not available yet") # No text translation available would send empty messages, so we end here
 	exit(1)                                     # implemented here as an example for Pull Requests for additionnal languages
 else:
-	contobroker = "✔️ successfully connected to MQTT broker"
+	contobroker = "✔️ successfully connected to MQTT broker"+crlf+version
 	brokerfailed = "❌ Failed to connect to MQTT broker"
 	majdispo = "🎁 An update is available"
 	etatendormie = "💤 is asleep"
@@ -233,7 +233,8 @@ def on_message(client, userdata, msg):
 		global CAR_ID
 		global UNITS
 		now = datetime.now()
-		today = now.strftime("%d-%m-%Y %H:%M:%S")
+		# today = now.strftime("%d-%m-%Y %H:%M:%S")
+		today = now.strftime("%d/%m/%Y %H:%M:%S") 
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
 	
 
