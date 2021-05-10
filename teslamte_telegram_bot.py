@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210509-01"
+version = "Version 20210510-01"
 
 import os
 import time
@@ -232,6 +232,9 @@ def on_message(client, userdata, msg):
 		global HORODATAGE
 		global CAR_ID
 		global UNITS
+		global heure
+		global minute
+		global plurialsuffix
 		now = datetime.now()
 		# today = now.strftime("%d-%m-%Y %H:%M:%S")
 		today = now.strftime("%d/%m/%Y %H:%M:%S") 
@@ -256,8 +259,8 @@ def on_message(client, userdata, msg):
 				if temps_restant_minute > 1: minute = minute + plurialsuffix
 				if temps_restant_heure > 1: heure = heure + plurialsuffix
 				temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+ minute
-
-			if int(float(temps_restant_mqtt)) == 0:
+			
+			if float(temps_restant_mqtt) == 0:
 				temps_restant_charge = chargeterminee
 				nouvelleinformation = True     				# Should we tell the user the car is charged ? :-)
 
@@ -347,7 +350,7 @@ def on_message(client, userdata, msg):
 				if DEBUG: print("According to boolean var about doors/windows/trunk/frunk the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf+text_energie+crlf
-				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf+text_energie+crlf
+				elif etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf+text_energie+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
 				if distance > 0 and UNITS == "Km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
