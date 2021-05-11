@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210510-01"
+version = "Version 20210511-01"
 
 import os
 import time
@@ -252,7 +252,7 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km": distance = math.floor(float(msg.payload.decode()))              # estimated range
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = str(msg.payload.decode())
-			if float(temps_restant_mqtt) > 1:
+			if float(temps_restant_mqtt) > 0:
 				nouvelleinformation = True    			 	# Send an update each time we get an updated ETA to full charge (debug)
 				temps_restant_heure = int(float(temps_restant_mqtt))
 				temps_restant_minute = int(float(round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)))
