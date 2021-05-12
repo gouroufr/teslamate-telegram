@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210511-01"
+version = "Version 20210512-01"
 
 import os
 import time
@@ -340,14 +340,12 @@ def on_message(client, userdata, msg):
 			if distance > 0:
 				if HORODATAGE == "top": text_msg = str(today) + crlf + pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				else: text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
-				if DEBUG: print("According to HORODATAGE var (" + HORODATAGE + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
-
+			
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
 				if windows_state != "❔": text_msg = text_msg+windows_state+crlf
 				if trunk_state != "❔": text_msg = text_msg+trunk_state+crlf
 				if frunk_state != "❔": text_msg = text_msg+frunk_state+crlf
-				if DEBUG: print("According to boolean var about doors/windows/trunk/frunk the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf+text_energie+crlf
 				elif etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf+text_energie+crlf
@@ -358,11 +356,9 @@ def on_message(client, userdata, msg):
 
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
-				if DEBUG: print("According to GPS var (" + str(GPS) + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				# bottom HORODATAGE the message if needed
 				if HORODATAGE == "bottom": text_msg = text_msg+crlf+str(today)
-				if DEBUG: print("According to HORODATAGE var (" + HORODATAGE + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)				
 
 				# Send the message
 				if DEBUG == True and distance > 0: print("DEBUG : Message sent to Telegram Bot : " + crlf + tirets +crlf +str(text_msg) + crlf + tirets + crlf)
