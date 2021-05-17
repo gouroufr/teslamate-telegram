@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210517-01"
+version = "Version 20210517-02"
 
 import os
 import time
@@ -237,6 +237,8 @@ def on_message(client, userdata, msg):
 		global minute
 		global plurialsuffix
 		now = datetime.now()
+		affminute = ""
+		affheure = ""
 		# today = now.strftime("%d-%m-%Y %H:%M:%S")
 		today = now.strftime("%d/%m/%Y %H:%M:%S") 
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
