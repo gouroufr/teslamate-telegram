@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210517-02"
+version = "Version 20210517-03"
 
 import os
 import time
@@ -237,8 +237,8 @@ def on_message(client, userdata, msg):
 		global minute
 		global plurialsuffix
 		now = datetime.now()
-		affminute = ""
-		affheure = ""
+		affminute = minute
+		affheure = heure
 		# today = now.strftime("%d-%m-%Y %H:%M:%S")
 		today = now.strftime("%d/%m/%Y %H:%M:%S") 
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
@@ -259,8 +259,8 @@ def on_message(client, userdata, msg):
 				nouvelleinformation = True    			 	# Send an update each time we get an updated ETA to full charge (debug)
 				temps_restant_heure = int(float(temps_restant_mqtt))
 				temps_restant_minute = int(float(round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)))
-				if temps_restant_minute > 1: affminute = minute + plurialsuffix
-				if temps_restant_heure > 1: affheure = heure + plurialsuffix
+				if temps_restant_minute > 1: affminute = affminute + plurialsuffix
+				if temps_restant_heure > 1: affheure = affheure + plurialsuffix
 				temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + affheure + " "+str(temps_restant_minute)+" "+ affminute
 
 			if int(float(temps_restant_mqtt)) == 0:
