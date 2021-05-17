@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210508-01"
+version = "Version 20210517-01"
 
 import os
 import time
@@ -135,7 +135,7 @@ elif language == "SP":
 	print("SPANISH language not available yet") # No text translation available would send empty messages, so we end here
 	exit(1)                                     # implemented here as an example for Pull Requests for additionnal languages
 else:
-	contobroker = "✔️ successfully connected to MQTT broker"
+	contobroker = "✔️ successfully connected to MQTT broker"+crlf+version
 	brokerfailed = "❌ Failed to connect to MQTT broker"
 	majdispo = "🎁 An update is available"
 	etatendormie = "💤 is asleep"
@@ -233,8 +233,12 @@ def on_message(client, userdata, msg):
 		global HORODATAGE
 		global CAR_ID
 		global UNITS
+		global heure
+		global minute
+		global plurialsuffix
 		now = datetime.now()
-		today = now.strftime("%d-%m-%Y %H:%M:%S")
+		# today = now.strftime("%d-%m-%Y %H:%M:%S")
+		today = now.strftime("%d/%m/%Y %H:%M:%S") 
 		print(str(today)+" >> "+str(msg.topic)+" : "+str(msg.payload.decode()))
 	
 
@@ -249,7 +253,7 @@ def on_message(client, userdata, msg):
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/est_battery_range_km": distance = math.floor(float(msg.payload.decode()))              # estimated range
 		if msg.topic == "teslamate/cars/"+str(CAR_ID)+"/time_to_full_charge":                                                    # Collect infos but don't send a message NOW
 			temps_restant_mqtt = str(msg.payload.decode())
-			if float(temps_restant_mqtt) > 1:
+			if float(temps_restant_mqtt) > 0:
 				nouvelleinformation = True    			 	# Send an update each time we get an updated ETA to full charge (debug)
 				temps_restant_heure = int(float(temps_restant_mqtt))
 				temps_restant_minute = int(float(round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)))
@@ -337,17 +341,15 @@ def on_message(client, userdata, msg):
 			if distance > 0:
 				if HORODATAGE == "top": text_msg = str(today) + crlf + pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
 				else: text_msg = pseudo+" ("+model+") "+str(km)+" km"+crlf+text_locked+crlf+etat_connu+crlf
-				if DEBUG: print("According to HORODATAGE var (" + HORODATAGE + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
-
+			
 				# Do we have some special infos to add to the standard message ?
 				if doors_state != "❔": text_msg = text_msg+doors_state+crlf
 				if windows_state != "❔": text_msg = text_msg+windows_state+crlf
 				if trunk_state != "❔": text_msg = text_msg+trunk_state+crlf
 				if frunk_state != "❔": text_msg = text_msg+frunk_state+crlf
-				if DEBUG: print("According to boolean var about doors/windows/trunk/frunk the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				if etat_connu == str(etatcharge) and temps_restant_charge == chargeterminee: text_msg = text_msg+chargeterminee+crlf+text_energie+crlf
-				if etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf+text_energie+crlf
+				elif etat_connu == str(etatcharge) and temps_restant_charge != "❔": text_msg = text_msg+temps_restant_charge+crlf+text_energie+crlf
 				if int(usable_battery_level) > minbat and int(usable_battery_level) != -1 :text_msg = text_msg+"🔋 "+str(usable_battery_level)+" %"+crlf
 				elif int(usable_battery_level) != -1: text_msg = text_msg+"🛢️ "+str(usable_battery_level)+" % "+lowbattery+crlf
 				if distance > 0 and UNITS == "Km": text_msg = text_msg+"🏎️ "+str(math.floor(distance))+" Km"+crlf
@@ -355,11 +357,9 @@ def on_message(client, userdata, msg):
 
 				# GPS location (googlemap)
 				if GPS: text_msg = text_msg + "https://www.google.fr/maps/?q="+str(latitude)+","+str(longitude)+crlf
-				if DEBUG: print("According to GPS var (" + str(GPS) + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)
 
 				# bottom HORODATAGE the message if needed
 				if HORODATAGE == "bottom": text_msg = text_msg+crlf+str(today)
-				if DEBUG: print("According to HORODATAGE var (" + HORODATAGE + ") the resulting message to the bot is at this step :" + crlf + text_msg + crlf)				
 
 				# Send the message
 				if DEBUG == True and distance > 0: print("DEBUG : Message sent to Telegram Bot : " + crlf + tirets +crlf +str(text_msg) + crlf + tirets + crlf)
