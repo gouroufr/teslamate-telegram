@@ -86,6 +86,7 @@ if os.getenv('DEBUG') != None: DEBUG = os.getenv('DEBUG')
 if DEBUG == "True": DEBUG = True
 else: DEBUG = False
 
+
 # Status print
 print (tirets)
 print("Env Var CAR_ID    : " + str(CAR_ID))
@@ -252,9 +253,9 @@ def on_message(client, userdata, msg):
 				nouvelleinformation = True    			 	# Send an update each time we get an updated ETA to full charge (debug)
 				temps_restant_heure = int(float(temps_restant_mqtt))
 				temps_restant_minute = int(float(round((float(temps_restant_mqtt) - temps_restant_heure) * 60,1)))
-				if temps_restant_minute > 1: minute = minute + plurialsuffix
-				if temps_restant_heure > 1: heure = heure + plurialsuffix
-				temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + heure + " "+str(temps_restant_minute)+" "+ minute
+				if temps_restant_minute > 1: affminute = minute + plurialsuffix
+				if temps_restant_heure > 1: affheure = heure + plurialsuffix
+				temps_restant_charge = "⏳ "+str(temps_restant_heure)+" " + affheure + " "+str(temps_restant_minute)+" "+ affminute
 
 			if int(float(temps_restant_mqtt)) == 0:
 				temps_restant_charge = chargeterminee
