@@ -5,7 +5,7 @@
 # Add translation to texts : Open call for other languages !
 
 # BETA version / copyleft Laurent alias gouroufr
-version = "Version 20210517-03"
+version = "Version 20211007-01"
 
 import os
 import time
