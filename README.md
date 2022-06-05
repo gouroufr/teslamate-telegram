@@ -102,6 +102,13 @@ volumes:
 
 All is free software under GPL licence.
 
-Donations are welcome :
+Donations and good will are welcome :
 
-Send bitcoins to 15DbfoLVmJ1iwHGnaeB25NBD2kE393XZZD Register and play/have fun/win a few satoshi for free here with this referral link : https://freebitco.in/?r=36618348 Help people around you Give a dog a new life (adoption) Save a licorn ... :-)
+Send bitcoins to 15DbfoLVmJ1iwHGnaeB25NBD2kE393XZZD
+
+Register and play/have fun/win a few satoshi for free here with this referral link : https://freebitco.in/?r=36618348
+
+Give a dog a new life (adoption) Save a licorn ... :-)
+
+Buy a Tesla with my referral link : https://ts.la/laurent15105
+
